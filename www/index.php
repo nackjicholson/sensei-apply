@@ -6,11 +6,14 @@ use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use Silex\Application;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = new Application();
+
+$app['debug'] = true;
 
 $app['config'] = $app->share(function() {
     $fileParser = new FileParser();
@@ -22,12 +25,10 @@ $app['aws'] = $app->share(function() {
 });
 
 $app['s3'] = $app->share(function() use ($app) {
-    // THROWS A FIT RIGHT HERE.
     return $app['aws']->getS3();
 });
 
 $app['dynamoDb'] = $app->share(function() use ($app) {
-    // AND HERE
     return $app['aws']->getDynamoDb();
 });
 
@@ -43,25 +44,27 @@ $app['logger'] = $app->share(function() use ($app) {
 });
 
 $app->post('/api/v1/apply', function(Request $request) use ($app) {
-
     $bucket = $app['config']['resumesBucket'];
 
     /** @var S3Client $s3 */
     $s3 = $app['s3'];
-    var_dump($s3);
+
+    $s3->createBucket(['Bucket' => $bucket]);
+    $s3->waitUntil('BucketExists', ['Bucket' => $bucket]);
 
 //    $s3->createBucket(
 //        ['Bucket' => $bucket, '@future' => true]
-//    )->then(function() use ($s3, $bucket) {
-//        return $s3->getWaiter('BucketExists', [
-//            'TableName' => $bucket
-//        ])->promise();
-//    })->then(function($result) use ($s3, $bucket) {
+//    )->then(function($result) use ($s3, $bucket) {
 //        var_dump($result);
+//        return $s3->getWaiter('BucketExists', ['Bucket' => $bucket])->promise();
+//    })->then(function($result) use ($s3, $bucket, $request) {
+//        var_dump($result);
+//        /** @var UploadedFile $resumeFile */
+//        $resumeFile = $request->files->get('resume');
+//        $s3->upload($bucket, $resumeFile->getFilename(), $resumeFile->openFile('r'));
 //    });
 
     $dynamoDb = $app['dynamoDb'];
-    var_dump($dynamoDb);
 
 //    $dynamoDb->createBucket(
 //        ['Bucket' => $bucket, '@future' => true]

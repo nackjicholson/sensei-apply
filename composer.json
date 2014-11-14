@@ -17,7 +17,8 @@
         "monolog/monolog": "~1",
         "silex/silex": "~1.2",
         "nackjicholson/monolog-gitter-im": "~1",
-        "nackjicholson/file-parser": "~2"
+        "nackjicholson/file-parser": "~2",
+        "twig/twig": ">=1.8,<2.0-dev"
     },
     "require-dev": {
         "pdepend/pdepend": "*@stable",

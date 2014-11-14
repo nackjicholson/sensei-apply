@@ -45,6 +45,7 @@ $app->post('/api/v1/apply', function(Request $request) use ($app) {
 
     /** @var S3Client $s3 */
     $s3 = $app['s3'];
+    $dynamoDb = $app['dynamoDb'];
 
     if (!$s3->doesBucketExist($bucket)) {
         $s3->createBucket(['Bucket' => $bucket, 'LocationConstraint' => $region]);
@@ -54,9 +55,8 @@ $app->post('/api/v1/apply', function(Request $request) use ($app) {
     /** @var UploadedFile $resumeFile */
     $resumeFile = $request->files->get('resume');
 
-    $s3->upload($bucket, $resumeFile->getClientOriginalName(), $resumeFile->openFile('r'));
+    $s3->upload($bucket, $resumeFile->getClientOriginalName(), fopen($resumeFile->getPathname(), 'r+'));
 
-    $dynamoDb = $app['dynamoDb'];
 
 //    $dynamoDb->createBucket(
 //        ['Bucket' => $bucket, '@future' => true]

@@ -13,7 +13,7 @@
         }
     },
     "require": {
-        "aws/aws-sdk-php": "~3.0@dev",
+        "aws/aws-sdk-php": "~2",
         "monolog/monolog": "~1",
         "silex/silex": "~1.2",
         "nackjicholson/monolog-gitter-im": "~1",

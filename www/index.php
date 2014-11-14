@@ -1,7 +1,7 @@
 <?php
 
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
-use Aws\Sdk;
 use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
@@ -20,16 +20,12 @@ $app['config'] = $app->share(function() {
     return $fileParser->yaml(__DIR__ . '/../config/local.yml');
 });
 
-$app['aws'] = $app->share(function() {
-    return new Sdk(['region' => 'us-west-2', 'version' => 'latest']);
-});
-
 $app['s3'] = $app->share(function() use ($app) {
-    return $app['aws']->getS3();
+    return S3Client::factory(['region' => $app['config']['region']]);
 });
 
 $app['dynamoDb'] = $app->share(function() use ($app) {
-    return $app['aws']->getDynamoDb();
+    return DynamoDbClient::factory(['region' => $app['config']['region']]);
 });
 
 $app['logger'] = $app->share(function() use ($app) {
@@ -45,24 +41,20 @@ $app['logger'] = $app->share(function() use ($app) {
 
 $app->post('/api/v1/apply', function(Request $request) use ($app) {
     $bucket = $app['config']['resumesBucket'];
+    $region = $app['config']['region'];
 
     /** @var S3Client $s3 */
     $s3 = $app['s3'];
 
-    $s3->createBucket(['Bucket' => $bucket]);
-    $s3->waitUntil('BucketExists', ['Bucket' => $bucket]);
+    if (!$s3->doesBucketExist($bucket)) {
+        $s3->createBucket(['Bucket' => $bucket, 'LocationConstraint' => $region]);
+        $s3->waitUntil('BucketExists', ['Bucket' => $bucket]);
+    }
 
-//    $s3->createBucket(
-//        ['Bucket' => $bucket, '@future' => true]
-//    )->then(function($result) use ($s3, $bucket) {
-//        var_dump($result);
-//        return $s3->getWaiter('BucketExists', ['Bucket' => $bucket])->promise();
-//    })->then(function($result) use ($s3, $bucket, $request) {
-//        var_dump($result);
-//        /** @var UploadedFile $resumeFile */
-//        $resumeFile = $request->files->get('resume');
-//        $s3->upload($bucket, $resumeFile->getFilename(), $resumeFile->openFile('r'));
-//    });
+    /** @var UploadedFile $resumeFile */
+    $resumeFile = $request->files->get('resume');
+
+    $s3->upload($bucket, $resumeFile->getClientOriginalName(), $resumeFile->openFile('r'));
 
     $dynamoDb = $app['dynamoDb'];
 

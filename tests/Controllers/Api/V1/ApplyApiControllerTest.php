@@ -82,13 +82,13 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
                 'TableName' => 'test.table',
                 'AttributeDefinitions' => [
                     [
-                        'AttributeName' => 'name',
+                        'AttributeName' => 'key',
                         'AttributeType' => 'S'
                     ]
                 ],
                 'KeySchema' => [
                     [
-                        'AttributeName' => 'name',
+                        'AttributeName' => 'key',
                         'KeyType' => 'HASH'
                     ]
                 ],
@@ -97,6 +97,11 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
                     'WriteCapacityUnits' => 1
                 ]
             ]);
+
+        $this->dynamoDb
+            ->expects($this->once())
+            ->method('waitUntil')
+            ->with('TableExists', ['TableName' => 'test.table']);
 
         $pathname = __DIR__ . '/Fixtures/test.gif';
 
@@ -132,10 +137,10 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('formatAttributes')
             ->with([
+                'key' => self::NEW_UNIQUE_KEY,
                 'name' => 'test.name',
                 'visible' => true,
                 'bucket' => 'test.bucket',
-                'key' => self::NEW_UNIQUE_KEY,
                 'originalFilename' => 'test.filename'
             ])
             ->willReturn(['foo' => 'bar']);
@@ -171,7 +176,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     {
         $this->dynamoDb = $this
             ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
-            ->setMethods(['describeTable', 'createTable', 'formatAttributes', 'putItem'])
+            ->setMethods(['describeTable', 'createTable', 'waitUntil', 'formatAttributes', 'putItem'])
             ->disableOriginalConstructor()
             ->getMock();
 

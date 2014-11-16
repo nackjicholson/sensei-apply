@@ -7,6 +7,7 @@ use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
+use SenseiApply\Controllers\Api\V1\ResumesApiControllerProvider;
 use Silex\Application;
 use Silex\Provider\ServiceControllerServiceProvider;
 use Silex\Provider\TwigServiceProvider;
@@ -57,5 +58,9 @@ $app->mount('/', $resumesControllerProvider);
 $applyApiControllerProvider = new ApplyApiControllerProvider();
 $app->register($applyApiControllerProvider);
 $app->mount('/api/v1/', $applyApiControllerProvider);
+
+$resumesApiControllerProvider = new ResumesApiControllerProvider();
+$app->register($resumesApiControllerProvider);
+$app->mount('/api/v1/', $resumesApiControllerProvider);
 
 $app->run();

@@ -70,15 +70,16 @@ class ApplyApiController
         $resumeFile = $request->files->get('resume');
         $originalFilename = $resumeFile->getClientOriginalName();
         $key = $this->generateUniqueS3Key($bucket);
+
         $this->s3->upload($bucket, $key, fopen($resumeFile->getPathname(), 'r+'));
 
         $this->dynamoDb->putItem([
             'TableName' => $tableName,
             'Item' => $this->dynamoDb->formatAttributes([
+                'key' => $key,
                 'name' => $name,
                 'visible' => true,
                 'bucket' => $bucket,
-                'key' => $key,
                 'originalFilename' => $originalFilename
             ])
         ]);
@@ -111,13 +112,13 @@ class ApplyApiController
                 'TableName' => $tableName,
                 'AttributeDefinitions' => [
                     [
-                        'AttributeName' => 'name',
+                        'AttributeName' => 'key',
                         'AttributeType' => 'S'
                     ]
                 ],
                 'KeySchema' => [
                     [
-                        'AttributeName' => 'name',
+                        'AttributeName' => 'key',
                         'KeyType' => 'HASH'
                     ]
                 ],
@@ -127,6 +128,10 @@ class ApplyApiController
                 ]
             ]);
         }
+
+        $this->dynamoDb->waitUntil('TableExists', array(
+            'TableName' => $tableName
+        ));
     }
 
     /**

@@ -1,3 +1,14 @@
-{% for file in fileList %}
-    <a href="/resumes/download/{{ file }}">{{ file }}</a>
-{% endfor %}
+{% extends "layout.twig" %}
+
+{% block title %}Home{% endblock %}
+{% block content %}
+    <p>Click to download.</p>
+    <div class="list-group">
+        {% for item in itemList %}
+            <a class="list-group-item" href="/api/v1/resumes/download/{{ item.bucket }}/{{ item.key }}">
+                <strong>{{ item.name}}</strong> -- <em>{{ item.key }}</em>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}
+

@@ -9,7 +9,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Cascade\\": "src/Cascade/"
+            "Cascade\\": "src/Cascade/",
+            "SenseiApply\\": "app/"
         }
     },
     "require": {

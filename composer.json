@@ -19,7 +19,8 @@
         "silex/silex": "~1.2",
         "nackjicholson/monolog-gitter-im": "~1",
         "nackjicholson/file-parser": "~2",
-        "twig/twig": ">=1.8,<2.0-dev"
+        "twig/twig": ">=1.8,<2.0-dev",
+        "symfony/twig-bridge": "~2"
     },
     "require-dev": {
         "pdepend/pdepend": "*@stable",

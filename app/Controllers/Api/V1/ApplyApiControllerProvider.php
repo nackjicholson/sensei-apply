@@ -60,5 +60,6 @@ class ApplyApiControllerProvider implements ControllerProviderInterface, Service
      */
     public function boot(Application $app)
     {
+        // noop
     }
 }

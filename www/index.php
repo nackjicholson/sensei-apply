@@ -2,6 +2,7 @@
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
+use Monolog\Handler\BufferHandler;
 use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
@@ -9,6 +10,7 @@ use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
 use Silex\Application;
 use Silex\Provider\ServiceControllerServiceProvider;
 use Silex\Provider\TwigServiceProvider;
+use Silex\Provider\UrlGeneratorServiceProvider;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -16,11 +18,9 @@ $app = new Application();
 
 $app['debug'] = true;
 
-$app->register(new TwigServiceProvider(), array(
-    'twig.path' => __DIR__ . '/../views',
-));
-
+$app->register(new TwigServiceProvider(), ['twig.path' => __DIR__ . '/../views']);
 $app->register(new ServiceControllerServiceProvider());
+$app->register(new UrlGeneratorServiceProvider());
 
 $app['config'] = $app->share(function() {
     $fileParser = new FileParser();
@@ -38,7 +38,7 @@ $app['dynamoDb'] = $app->share(function($app) {
 $app['logger'] = $app->share(function($app) {
     $config = $app['config'];
     $gitterHandler = new GitterImHandler($config['gitterToken'], $config['gitterRoomId'], Logger::NOTICE);
-    $bufferHandler = new \Monolog\Handler\BufferHandler($gitterHandler);
+    $bufferHandler = new BufferHandler($gitterHandler);
 
     $logger = new Logger('cascade-sensei-apply');
     $logger->pushHandler($bufferHandler);

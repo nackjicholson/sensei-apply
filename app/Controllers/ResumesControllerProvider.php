@@ -7,6 +7,9 @@ use Silex\ControllerCollection;
 use Silex\ControllerProviderInterface;
 use Silex\ServiceProviderInterface;
 
+/**
+ * Manages the routes and services specific to the Sensei Apply resumes app.
+ */
 class ResumesControllerProvider implements ControllerProviderInterface, ServiceProviderInterface
 {
     /**
@@ -56,6 +59,6 @@ class ResumesControllerProvider implements ControllerProviderInterface, ServiceP
      */
     public function boot(Application $app)
     {
-        // TODO: Implement boot() method.
+        // noop
     }
 }

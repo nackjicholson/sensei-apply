@@ -2,16 +2,24 @@
 
 namespace SenseiApply\Controllers\Api\V1;
 
-use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\ResourceNotFoundException;
-use Aws\S3\S3Client;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
+function uniqid()
+{
+    $callCount = ApplyApiControllerTest::$uniqidCallNumber++;
+    return ($callCount > 0) ? ApplyApiControllerTest::NEW_UNIQUE_KEY : ApplyApiControllerTest::EXISTING_KEY;
+}
+
 class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
 {
+    const NEW_UNIQUE_KEY = 'myKey';
+    const EXISTING_KEY = 'usedKey';
+
+    public static $uniqidCallNumber = 0;
+
     /** @var ApplyApiController */
     private $sut;
 
@@ -112,7 +120,13 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $request->files->expects($this->once())->method('get')->with('resume')->willReturn($resumeFile);
         $request->request->expects($this->once())->method('get')->with('profile[name]')->willReturn($name);
 
-        $this->s3->expects($this->once())->method('upload')->with('test.bucket', 'test.filename');
+        $this->s3
+            ->expects($this->exactly(2))
+            ->method('doesObjectExist')
+            ->withConsecutive(['test.bucket', self::EXISTING_KEY], ['test.bucket', self::NEW_UNIQUE_KEY])
+            ->willReturnOnConsecutiveCalls(true, false);
+
+        $this->s3->expects($this->once())->method('upload')->with('test.bucket', self::NEW_UNIQUE_KEY);
 
         $this->dynamoDb
             ->expects($this->once())
@@ -121,7 +135,8 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
                 'name' => 'test.name',
                 'visible' => true,
                 'bucket' => 'test.bucket',
-                'key' => 'test.filename'
+                'key' => self::NEW_UNIQUE_KEY,
+                'originalFilename' => 'test.filename'
             ])
             ->willReturn(['foo' => 'bar']);
 
@@ -164,7 +179,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
 
         $this->s3 = $this
             ->getMockBuilder('Aws\\S3\\S3Client')
-            ->setMethods(['doesBucketExist', 'createBucket', 'waitUntil', 'upload'])
+            ->setMethods(['doesBucketExist', 'createBucket', 'waitUntil', 'doesObjectExist', 'upload'])
             ->disableOriginalConstructor()
             ->getMock();
     }

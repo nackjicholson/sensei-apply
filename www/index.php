@@ -21,7 +21,7 @@ $app = new Application();
 
 $app['debug'] = true;
 
-$app->register(new TwigServiceProvider(), ['twig.path' => __DIR__ . '/../views']);
+$app->register(new TwigServiceProvider(), ['twig.path' => __DIR__ . '/../app/Views']);
 $app->register(new ServiceControllerServiceProvider());
 $app->register(new UrlGeneratorServiceProvider());
 

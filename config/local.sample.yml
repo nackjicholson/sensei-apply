@@ -3,4 +3,4 @@ gitterRoomId: <roomId>
 resumesBucket: <bucketName>
 applicantsTable: <tableName>
 region: <availabilityRegion>
-homeLink: http://<url>
+to: <string || array of email addresses>

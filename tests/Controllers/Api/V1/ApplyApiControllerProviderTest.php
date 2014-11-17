@@ -22,6 +22,10 @@ class ApplyApiControllerProviderTest extends \PHPUnit_Framework_TestCase
             's3' => $this
                 ->getMockBuilder('Aws\\S3\\S3Client')
                 ->disableOriginalConstructor()
+                ->getMock(),
+            'url_generator' => $this
+                ->getMockBuilder('Symfony\\Component\\Routing\\Generator\\UrlGenerator')
+                ->disableOriginalConstructor()
                 ->getMock()
         ]);
 
@@ -31,6 +35,7 @@ class ApplyApiControllerProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertAttributeInstanceOf('Aws\\DynamoDb\\DynamoDbClient', 'dynamoDb', $applyApiController);
         $this->assertAttributeInstanceOf('Aws\\S3\\S3Client', 's3', $applyApiController);
         $this->assertAttributeInstanceOf('Psr\\Log\\LoggerInterface', 'logger', $applyApiController);
+        $this->assertAttributeInstanceOf('Symfony\\Component\\Routing\\Generator\\UrlGenerator', 'urlGenerator', $applyApiController);
     }
 
     public function testConnectsApplyApiRoutes()

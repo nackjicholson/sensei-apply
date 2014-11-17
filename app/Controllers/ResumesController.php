@@ -42,7 +42,7 @@ class ResumesController
 
     public function index()
     {
-        return $this->twig->render('home.twig', [
+        return $this->twig->render('resumes/index.twig', [
             'itemList' => new ItemIterator($this->dynamoDb->getIterator('Scan', [
                 'TableName' => $this->tableName
             ]))

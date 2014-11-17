@@ -10,6 +10,7 @@ use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGenerator;
 
 class ApplyApiController
 {
@@ -23,6 +24,9 @@ class ApplyApiController
 
     /** @var S3Client */
     private $s3;
+
+    /** @var UrlGenerator */
+    private $urlGenerator;
 
     /**
      * @param array $config
@@ -49,6 +53,14 @@ class ApplyApiController
     }
 
     /**
+     * @param UrlGenerator $urlGenerator
+     */
+    public function setUrlGenerator($urlGenerator)
+    {
+        $this->urlGenerator = $urlGenerator;
+    }
+
+    /**
      * @param Application $app
      * @param Request $request
      *
@@ -59,7 +71,6 @@ class ApplyApiController
         $tableName = $this->config['resumesMetaTable'];
         $bucket = $this->config['resumesBucket'];
         $region = $this->config['region'];
-        $link = $this->config['homeLink'];
 
         $this->ensureBucketExists($bucket, $region);
         $this->ensureTableExists($tableName);
@@ -84,6 +95,7 @@ class ApplyApiController
             ])
         ]);
 
+        $link = $this->urlGenerator->generate('homepage', [], UrlGenerator::ABSOLUTE_URL);
         $this->logger->notice("New resume received from $name, check $link");
         return $app->json("Thank you for applying via api {$name}");
     }

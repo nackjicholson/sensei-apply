@@ -2,7 +2,9 @@
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
+use Monolog\Formatter\HtmlFormatter;
 use Monolog\Handler\BufferHandler;
+use Monolog\Handler\NativeMailerHandler;
 use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
@@ -39,17 +41,26 @@ $app['dynamoDb'] = $app->share(function($app) {
 $app['logger'] = $app->share(function($app) {
     $config = $app['config'];
     $gitterHandler = new GitterImHandler($config['gitterToken'], $config['gitterRoomId'], Logger::NOTICE);
-    $bufferHandler = new BufferHandler($gitterHandler);
+    $chatBuffer = new BufferHandler($gitterHandler);
+
+    $subject = 'Sensei Apply -- Resume Received';
+    $from = 'no-reply@apply.energysensei.info';
+    $mailHandler = new NativeMailerHandler($config['to'], $subject, $from, Logger::NOTICE);
+    $mailHandler->setContentType('text/html');
+    $mailHandler->setFormatter(new HtmlFormatter());
+    $mailBuffer = new BufferHandler($mailHandler);
 
     $logger = new Logger('cascade-sensei-apply');
-    $logger->pushHandler($bufferHandler);
+    $logger->pushHandler($chatBuffer);
+    $logger->pushHandler($mailBuffer);
 
     return $logger;
 });
 
 $app->get('/', function() use ($app) {
     return $app->redirect('/resumes');
-});
+})
+->bind('homepage');
 
 $resumesControllerProvider = new \SenseiApply\Controllers\ResumesControllerProvider();
 $app->register($resumesControllerProvider);

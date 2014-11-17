@@ -39,7 +39,7 @@ class ResumesControllerTest extends \PHPUnit_Framework_TestCase
         $this->twig
             ->expects($this->once())
             ->method('render')
-            ->with('home.twig', [
+            ->with('resumes/index.twig', [
                 'itemList' => new ItemIterator($scanIterator)
             ])
             ->willReturn('html.string');

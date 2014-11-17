@@ -6,6 +6,7 @@ use Aws\DynamoDb\Exception\ResourceNotFoundException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGenerator;
 
 function uniqid()
 {
@@ -27,8 +28,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     private static $config = [
         'resumesBucket' => 'test.bucket',
         'resumesMetaTable' => 'test.table',
-        'region' => 'test.region',
-        'homeLink' => 'test.link'
+        'region' => 'test.region'
     ];
 
     /** @var \PHPUnit_Framework_MockObject_MockObject */
@@ -40,6 +40,9 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     /** @var \PHPUnit_Framework_MockObject_MockObject */
     private $s3;
 
+    /** @var \PHPUnit_Framework_MockObject_MockObject */
+    private $urlGenerator;
+
     public function setUp()
     {
         $this->constructMocks();
@@ -49,6 +52,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $this->sut->setDynamoDb($this->dynamoDb);
         $this->sut->setLogger($this->logger);
         $this->sut->setS3($this->s3);
+        $this->sut->setUrlGenerator($this->urlGenerator);
     }
 
     public function testStore()
@@ -153,6 +157,12 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
                 'Item' => ['foo' => 'bar']
             ]);
 
+        $this->urlGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->with('homepage', [], UrlGenerator::ABSOLUTE_URL)
+            ->willReturn('test.link');
+
         $this->logger
             ->expects($this->once())
             ->method('notice')
@@ -185,6 +195,11 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $this->s3 = $this
             ->getMockBuilder('Aws\\S3\\S3Client')
             ->setMethods(['doesBucketExist', 'createBucket', 'waitUntil', 'doesObjectExist', 'upload'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->urlGenerator = $this
+            ->getMockBuilder('Symfony\\Component\\Routing\\Generator\\UrlGenerator')
             ->disableOriginalConstructor()
             ->getMock();
     }

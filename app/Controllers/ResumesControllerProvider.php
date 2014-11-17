@@ -45,7 +45,10 @@ class ResumesControllerProvider implements ControllerProviderInterface, ServiceP
         $controllers = $app['controllers_factory'];
 
         $controllers->get('/resumes', 'resumes.controller:index');
-        $controllers->get('/resumes/{bucket}/{key}', 'resumes.controller:show');
+
+        $controllers
+            ->get('/resumes/{bucket}/{key}', 'resumes.controller:show')
+            ->bind('resumes.download');
 
         return $controllers;
     }

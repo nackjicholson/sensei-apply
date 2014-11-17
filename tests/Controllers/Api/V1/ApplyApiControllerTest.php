@@ -160,13 +160,17 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $this->urlGenerator
             ->expects($this->once())
             ->method('generate')
-            ->with('homepage', [], UrlGenerator::ABSOLUTE_URL)
+            ->with(
+                'resumes.download',
+                ['bucket' => 'test.bucket', 'key' => self::NEW_UNIQUE_KEY],
+                UrlGenerator::ABSOLUTE_URL
+            )
             ->willReturn('test.link');
 
         $this->logger
             ->expects($this->once())
             ->method('notice')
-            ->with("New resume received from test.name, check test.link");
+            ->with("New resume received from test.name, view here test.link");
 
         $response = new JsonResponse();
         $app = $this

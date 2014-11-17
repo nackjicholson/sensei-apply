@@ -95,8 +95,13 @@ class ApplyApiController
             ])
         ]);
 
-        $link = $this->urlGenerator->generate('homepage', [], UrlGenerator::ABSOLUTE_URL);
-        $this->logger->notice("New resume received from $name, check $link");
+        $resumeLink = $this->urlGenerator->generate(
+            'resumes.download',
+            ['bucket' => $bucket, 'key' => $key],
+            UrlGenerator::ABSOLUTE_URL
+        );
+
+        $this->logger->notice("New resume received from $name, view here $resumeLink");
         return $app->json("Thank you for applying via api {$name}");
     }
 

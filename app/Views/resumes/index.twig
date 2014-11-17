@@ -5,7 +5,7 @@
     <p>Click to view.</p>
     <div class="list-group">
         {% for item in itemList %}
-            <a class="list-group-item" href="/resumes/{{ item.bucket }}/{{ item.key }}">
+            <a class="list-group-item" href="{{ path('resumes.download', {bucket: item.bucket, key: item.key}) }}">
                 <strong>{{ item.name}}</strong> -- <em>{{ item.originalFilename }}</em>
             </a>
         {% endfor %}

@@ -1,0 +1,6 @@
+gitterToken: <token>
+gitterRoomId: <roomId>
+resumesBucket: <bucketName>
+applicantsTable: <tableName>
+region: <availabilityRegion>
+to: <string || array of email addresses>

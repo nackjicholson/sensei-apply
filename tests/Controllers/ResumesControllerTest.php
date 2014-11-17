@@ -15,6 +15,9 @@ class ResumesControllerTest extends \PHPUnit_Framework_TestCase
     private $dynamoDb;
 
     /** @var \PHPUnit_Framework_MockObject_MockObject */
+    private $s3;
+
+    /** @var \PHPUnit_Framework_MockObject_MockObject */
     private $twig;
 
     public function setUp()
@@ -22,6 +25,7 @@ class ResumesControllerTest extends \PHPUnit_Framework_TestCase
         $this->constructMocks();
         $this->sut = new ResumesController();
         $this->sut->setDynamoDb($this->dynamoDb);
+        $this->sut->setS3($this->s3);
         $this->sut->setTableName(self::TABLE_NAME);
         $this->sut->setTwig($this->twig);
     }
@@ -52,6 +56,11 @@ class ResumesControllerTest extends \PHPUnit_Framework_TestCase
         $this->dynamoDb = $this
             ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
             ->setMethods(['getIterator'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->s3 = $this
+            ->getMockBuilder('Aws\\S3\\S3Client')
             ->disableOriginalConstructor()
             ->getMock();
 

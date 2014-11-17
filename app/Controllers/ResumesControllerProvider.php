@@ -25,6 +25,7 @@ class ResumesControllerProvider implements ControllerProviderInterface, ServiceP
         $app['resumes.controller'] = $app->share(function($app) {
             $resumesController = new ResumesController();
             $resumesController->setDynamoDb($app['dynamoDb']);
+            $resumesController->setS3($app['s3']);
             $resumesController->setTableName($app['config']['resumesMetaTable']);
             $resumesController->setTwig($app['twig']);
             return $resumesController;
@@ -44,6 +45,7 @@ class ResumesControllerProvider implements ControllerProviderInterface, ServiceP
         $controllers = $app['controllers_factory'];
 
         $controllers->get('/resumes', 'resumes.controller:index');
+        $controllers->get('/resumes/{bucket}/{key}', 'resumes.controller:show');
 
         return $controllers;
     }

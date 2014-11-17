@@ -20,7 +20,8 @@
         "nackjicholson/monolog-gitter-im": "~1",
         "nackjicholson/file-parser": "~2",
         "twig/twig": ">=1.8,<2.0-dev",
-        "symfony/twig-bridge": "~2"
+        "symfony/twig-bridge": "~2",
+        "symfony/security": "~2"
     },
     "require-dev": {
         "pdepend/pdepend": "*@stable",

@@ -18,6 +18,10 @@ class ResumesControllerProviderTest extends \PHPUnit_Framework_TestCase
                 ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
                 ->disableOriginalConstructor()
                 ->getMock(),
+            's3' => $this
+                ->getMockBuilder('Aws\\S3\\S3Client')
+                ->disableOriginalConstructor()
+                ->getMock(),
             'twig' => $this->getMock('\\Twig_Environment')
         ]);
 
@@ -25,6 +29,7 @@ class ResumesControllerProviderTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf('SenseiApply\\Controllers\\ResumesController', $resumesController);
         $this->assertAttributeInstanceOf('Aws\\DynamoDb\\DynamoDbClient', 'dynamoDb', $resumesController);
+        $this->assertAttributeInstanceOf('Aws\\S3\\S3Client', 's3', $resumesController);
         $this->assertAttributeEquals('test.table', 'tableName', $resumesController);
         $this->assertAttributeInstanceOf('\\Twig_Environment', 'twig', $resumesController);
     }

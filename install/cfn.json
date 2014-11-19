@@ -26,25 +26,29 @@
     "Resources": {
         "ResumesBucket": {
             "Type": "AWS::S3::Bucket",
-            "AccessControl": "Private",
-            "BucketName": {
-                "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes"]]
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": {
+                    "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes"]]
+                }
             }
         },
         "ResumesMetaTable": {
             "Type": "AWS::DynamoDB::Table",
-            "TableName": {
-                "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes.meta"]]
-            },
-            "AttributeDefinitions": [
-                {"AttributeName": "key", "AttributeType": "S"}
-            ],
-            "KeySchema": [
-                {"AttributeName": "key", "KeyType": "HASH"}
-            ],
-            "ProvisionedThroughput": {
-                "ReadCapacityUnits": 1,
-                "WriteCapacityUnits": 1
+            "Properties": {
+                "TableName": {
+                    "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes.meta"]]
+                },
+                "AttributeDefinitions": [
+                    {"AttributeName": "key", "AttributeType": "S"}
+                ],
+                "KeySchema": [
+                    {"AttributeName": "key", "KeyType": "HASH"}
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 1,
+                    "WriteCapacityUnits": 1
+                }
             }
         },
         "WebServerInstance": {

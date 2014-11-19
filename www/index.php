@@ -9,7 +9,7 @@ use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
-use SenseiApply\Controllers\Api\V1\ResumesApiControllerProvider;
+use SenseiApply\Controllers\ResumesControllerProvider;
 use Silex\Application;
 use Silex\Provider\SecurityServiceProvider;
 use Silex\Provider\ServiceControllerServiceProvider;
@@ -85,7 +85,7 @@ $app->get('/login', function(Request $request) use ($app) {
     ));
 });
 
-$resumesControllerProvider = new \SenseiApply\Controllers\ResumesControllerProvider();
+$resumesControllerProvider = new ResumesControllerProvider();
 $app->register($resumesControllerProvider);
 $app->mount('/', $resumesControllerProvider);
 

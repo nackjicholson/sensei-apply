@@ -1,0 +1,74 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Sensei apply cloud formation.",
+    "Parameters": {
+        "Channel": {
+            "Type": "String",
+            "Description": "The channel partner name.",
+            "Default": "cascade",
+            "AllowedValues": [ "cascade" ]
+        },
+        "Environment": {
+            "Type": "String",
+            "Description": "The environment.",
+            "Default": "development",
+            "AllowedValues": ["development", "staging", "production"]
+        },
+        "System": {
+            "Type": "String",
+            "Description": "The system.",
+            "AllowedPattern": "[a-zA-Z0-9.]+"
+        },
+        "Version": {
+            "Type": "Number"
+        }
+    },
+    "Resources": {
+        "ResumesBucket": {
+            "Type": "AWS::S3::Bucket",
+            "AccessControl": "Private",
+            "BucketName": {
+                "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes"]]
+            }
+        },
+        "ResumesMetaTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "TableName": {
+                "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, {"Ref": "System"}, "resumes.meta"]]
+            },
+            "AttributeDefinitions": [
+                {"AttributeName": "key", "AttributeType": "S"}
+            ],
+            "KeySchema": [
+                {"AttributeName": "key", "KeyType": "HASH"}
+            ],
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 1,
+                "WriteCapacityUnits": 1
+            }
+        },
+        "WebServerInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-b5a7ea85",
+                "SecurityGroups": [{"Ref": "WebServerSecurityGroup"}],
+                "InstanceType": "t2.micro",
+                "Tags": [
+                    {"Key": "Name", "Value": "apply001"},
+                    {"Key": "Channel", "Value": {"Ref": "Channel"}},
+                    {"Key": "Environment", "Value": {"Ref": "Environment"}},
+                    {"Key": "System", "Value": {"Ref": "System"}}
+                ]
+            }
+        },
+        "WebServerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable HTTP access via port 80",
+                "SecurityGroupIngress": [
+                    {"IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0"}
+                ]
+            }
+        }
+    }
+}

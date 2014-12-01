@@ -1,0 +1,195 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Sensei apply cloud formation.",
+    "Parameters": {
+        "Channel": {
+            "Type": "String",
+            "Description": "The channel partner name.",
+            "Default": "cascade",
+            "AllowedPattern": "[a-z.]+"
+        },
+        "Environment": {
+            "Type": "String",
+            "Description": "The environment.",
+            "Default": "development",
+            "AllowedValues": ["development", "staging", "production"]
+        },
+        "KeyName": {
+            "Description": "The EC2 Key Pair to allow SSH access to the instances",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        }
+    },
+    "Resources": {
+        "ResumesBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": {
+                    "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, "apply", "resumes"]]
+                }
+            }
+        },
+        "ResumesMetaTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Join": ["-", [{"Ref": "Channel"}, {"Ref": "Environment"}, "apply", "resumes.meta"]]
+                },
+                "AttributeDefinitions": [
+                    {"AttributeName": "key", "AttributeType": "S"}
+                ],
+                "KeySchema": [
+                    {"AttributeName": "key", "KeyType": "HASH"}
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 1,
+                    "WriteCapacityUnits": 1
+                }
+            }
+        },
+        "SenseiApplyRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": ["ec2.amazonaws.com"]
+                            },
+                            "Action": ["sts:AssumeRole"]
+                        }
+                    ]
+                },
+                "Path": "/cascade/senseiApplyRole/",
+                "Policies": [
+                    {
+                        "PolicyName": "sensei-apply-policy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:*"
+                                    ],
+                                    "Resource": [
+                                        {"Fn::Join": ["", ["arn:aws:dynamodb:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":", "table/", {"Ref": "ResumesMetaTable"}]]}
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Resource": [
+                                        {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "ResumesBucket"}]]},
+                                        {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "ResumesBucket"}, "/*"]]}
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "SenseiApplyProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/cascade/senseiApplyProfile/",
+                "Roles": [ { "Ref": "SenseiApplyRole" } ]
+            }
+        },
+        "WebServerGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AvailabilityZones": { "Fn::GetAZs": {"Ref": "AWS::Region"}},
+                "DesiredCapacity": "2",
+                "LaunchConfigurationName": {"Ref": "LaunchConfig"},
+                "MinSize": "1",
+                "MaxSize": "3",
+                "LoadBalancerNames": [{"Ref": "ElasticLoadBalancer"}],
+                "Tags": [
+                    {"Key": "Name", "Value": "apply", "PropagateAtLaunch": "true"},
+                    {"Key": "Channel", "Value": {"Ref": "Channel"}, "PropagateAtLaunch": "true"},
+                    {"Key": "Environment", "Value": {"Ref": "Environment"}, "PropagateAtLaunch": "true"},
+                    {"Key": "System", "Value": "apply", "PropagateAtLaunch": "true"}
+                ]
+            }
+        },
+        "LaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata": {
+                "Comment": "Ensure application is ready.",
+                "AWS::CloudFormation::Init": {
+                    "services": {
+                        "sysvinit": {
+                            "httpd": {"enabled": "true", "ensureRunning": "true"}
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "InstanceType": "t2.micro",
+                "IamInstanceProfile": {
+                    "Ref": "SenseiApplyProfile"
+                },
+                "KeyName": {"Ref": "KeyName"},
+                "ImageId": "ami-e3feabd3",
+                "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}]
+            }
+        },
+        "WebServerScaleUpPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "AutoScalingGroupName": {"Ref": "WebServerGroup"},
+                "Cooldown": "60",
+                "ScalingAdjustment": "1"
+            }
+        },
+        "WebServerScaleDownPolicy": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "AutoScalingGroupName": {"Ref": "WebServerGroup"},
+                "Cooldown": "60",
+                "ScalingAdjustment": "-1"
+            }
+        },
+        "ElasticLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "AvailabilityZones": { "Fn::GetAZs": {"Ref": "AWS::Region"}},
+                "CrossZone": "true",
+                "Listeners": [
+                    {
+                        "LoadBalancerPort": "80",
+                        "InstancePort": "80",
+                        "Protocol": "HTTP"
+                    }
+                ],
+                "HealthCheck": {
+                    "Target": "HTTP:80/login",
+                    "Interval": "30",
+                    "Timeout": "5",
+                    "HealthyThreshold": "3",
+                    "UnhealthyThreshold": "5"
+                }
+            }
+        },
+        "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable HTTP access via port 80",
+                "SecurityGroupIngress": [
+                    {"IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0"},
+                    {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "50.204.9.158/24"},
+                    {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "98.246.154.178/24"}
+                ]
+            }
+        }
+    }
+}

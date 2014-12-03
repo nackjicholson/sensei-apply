@@ -2,6 +2,20 @@
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Sensei apply cloud formation.",
     "Parameters": {
+        "GitRemote": {
+            "Type": "String",
+            "Description": "HTTPS or SSH remote to pull code from",
+            "Default": "https://github.com/CascadeEnergy/sensei-apply.git"
+        },
+        "GitBranch": {
+            "Type": "String",
+            "Description": "The branch in the repo to install",
+            "Default": "master"
+        },
+        "EmailRecipients": {
+            "Type": "CommaDelimitedList",
+            "Description": "Comma-delimited list of email addresses to notify."
+        },
         "GitterApiToken": {
             "Type": "String",
             "Description": "Gitter api token."
@@ -132,12 +146,44 @@
             "Metadata": {
                 "Comment": "Ensure application is ready.",
                 "AWS::CloudFormation::Init": {
-                    "config": {
+                    "configSets": {
+                        "default": ["deployCode", "composeYaml"]
+                    },
+                    "deployCode": {
+                        "packages": {
+                            "yum": {
+                                "git": []
+                            }
+                        },
+                        "commands": {
+                            "01_clone_repo": {
+                                "command": {"Fn::Join": ["", ["git clone -b ", {"Ref": "GitBranch"}, " ", {"Ref": "GitRemote"}]]},
+                                "cwd": "/var/cascade"
+                            },
+                            "02_copy_httpd_conf": {
+                                "command": "cp sensei-apply.conf /etc/httpd/conf.d/sensei-apply.conf",
+                                "cwd": "/var/cascade/sensei-apply/install"
+                            },
+                            "03_get_composer": {
+                                "command": "curl -sS https://getcomposer.org/installer | php",
+                                "cwd": "/var/cascade/sensei-apply"
+                            },
+                            "04_composer_install": {
+                                "command": "sudo php composer.phar install",
+                                "cwd": "/var/cascade/sensei-apply"
+                            },
+                            "05_change_ownership": {
+                                "command": "chown -R ec2-user:ec2-user sensei-apply",
+                                "cwd": "/var/cascade"
+                            }
+                        },
                         "services": {
                             "sysvinit": {
                                 "httpd": {"enabled": "true", "ensureRunning": "true"}
                             }
-                        },
+                        }
+                    },
+                    "composeYaml": {
                         "files": {
                             "/var/cascade/sensei-apply/config/local.yml": {
                                 "content": {"Fn::Join": ["", [
@@ -147,12 +193,17 @@
                                     "resumesMetaTable: ", {"Ref": "ResumesMetaTable"}, "\n",
                                     "region: ", {"Ref": "AWS::Region"}, "\n",
                                     "to:\n",
-                                    "  - willieviseoae@gmail.com\n",
-                                    "  - will.vaughn@cascadeenergy.com\n"
+                                    "{{#recipients}}  - {{.}}\n{{/recipients}}"
                                 ]]},
+                                "context": {"recipients": {"Ref": "EmailRecipients"}},
                                 "mode": "000644",
                                 "owner": "ec2-user",
                                 "group": "ec2-user"
+                            }
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "httpd": {"enabled": "true", "ensureRunning": "true"}
                             }
                         }
                     }
@@ -164,11 +215,12 @@
                     "Ref": "SenseiApplyProfile"
                 },
                 "KeyName": {"Ref": "KeyName"},
-                "ImageId": "ami-c95d0af9",
+                "ImageId": "ami-09bbec39",
                 "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}],
                 "UserData": {"Fn::Base64": {"Fn::Join": ["",
                     [
-                        "#!/bin/bash\n",
+                        "#!/bin/bash -xe\n",
+                        "yum update -y aws-cfn-bootstrap\n",
                         "/opt/aws/bin/cfn-init -v ",
                         " --region ", {"Ref": "AWS::Region"},
                         " --stack ", {"Ref": "AWS::StackName"},

@@ -156,23 +156,24 @@
                             }
                         },
                         "commands": {
-                            "01_clone_repo": {
+                            "100_clone_repo": {
                                 "command": {"Fn::Join": ["", ["git clone -b ", {"Ref": "GitBranch"}, " ", {"Ref": "GitRemote"}]]},
                                 "cwd": "/var/cascade"
                             },
-                            "02_copy_httpd_conf": {
+                            "200_copy_httpd_conf": {
                                 "command": "cp sensei-apply.conf /etc/httpd/conf.d/sensei-apply.conf",
                                 "cwd": "/var/cascade/sensei-apply/install"
                             },
-                            "03_get_composer": {
+                            "300_get_composer": {
                                 "command": "curl -sS https://getcomposer.org/installer | php",
                                 "cwd": "/var/cascade/sensei-apply"
                             },
-                            "04_composer_install": {
-                                "command": "sudo php composer.phar install",
-                                "cwd": "/var/cascade/sensei-apply"
+                            "400_run_composer": {
+                                "command": "php composer.phar install --no-dev --optimize-autoloader --prefer-dist --no-interaction",
+                                "cwd": "/var/cascade/sensei-apply",
+                                "env": {"COMPOSER_HOME": "/home/ec2-user"}
                             },
-                            "05_change_ownership": {
+                            "500_change_ownership": {
                                 "command": "chown -R ec2-user:ec2-user sensei-apply",
                                 "cwd": "/var/cascade"
                             }
@@ -187,23 +188,30 @@
                         "files": {
                             "/var/cascade/sensei-apply/config/local.yml": {
                                 "content": {"Fn::Join": ["", [
-                                    "gitterToken: ", {"Ref": "GitterApiToken"}, "\n",
-                                    "gitterRoomId: ", {"Ref": "GitterRoomId"}, "\n",
-                                    "resumesBucket: ", {"Ref": "ResumesBucket"}, "\n",
-                                    "resumesMetaTable: ", {"Ref": "ResumesMetaTable"}, "\n",
-                                    "region: ", {"Ref": "AWS::Region"}, "\n",
+                                    "gitterToken: {{gitterToken}}\n",
+                                    "gitterRoomId: {{gitterRoomId}}\n",
+                                    "resumesBucket: {{resumesBucket}}\n",
+                                    "resumesMetaTable: {{resumesMetaTable}}\n",
+                                    "region: {{region}}\n",
                                     "to:\n",
                                     "{{#recipients}}  - {{.}}\n{{/recipients}}"
                                 ]]},
-                                "context": {"recipients": {"Ref": "EmailRecipients"}},
+                                "context": {
+                                    "gitterToken": {"Ref": "GitterApiToken"},
+                                    "gitterRoomId": {"Ref": "GitterRoomId"},
+                                    "resumesBucket": {"Ref": "ResumesBucket"},
+                                    "resumesMetaTable": {"Ref": "ResumesMetaTable"},
+                                    "region": {"Ref": "AWS::Region"},
+                                    "recipients": {"Ref": "EmailRecipients"}
+                                },
                                 "mode": "000644",
                                 "owner": "ec2-user",
                                 "group": "ec2-user"
                             }
                         },
-                        "services": {
-                            "sysvinit": {
-                                "httpd": {"enabled": "true", "ensureRunning": "true"}
+                        "commands": {
+                            "httpd_reload": {
+                                "command": "service httpd reload"
                             }
                         }
                     }
@@ -266,6 +274,16 @@
                     "HealthyThreshold": "3",
                     "UnhealthyThreshold": "5"
                 }
+            }
+        },
+        "Route53Group": {
+            "Type": "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": "/hostedzone/Z1DQ4UYB8BEAYN",
+                "Name": {"Fn::Join": [".", [{"Ref": "Channel"}, {"Ref": "Environment"}, "apply.energysensei.info."]]},
+                "Type": "CNAME",
+                "TTL": "900",
+                "ResourceRecords": [{"Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}]
             }
         },
         "InstanceSecurityGroup": {

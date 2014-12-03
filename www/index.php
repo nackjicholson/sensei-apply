@@ -93,6 +93,7 @@ $applyApiControllerProvider = new ApplyApiControllerProvider();
 $app->register($applyApiControllerProvider);
 $app->mount('/api/v1/', $applyApiControllerProvider);
 
+// Set up memcached session handling via ElastiCache cluster.
 $app['session.storage.handler'] = null;
 ini_set('session.save_handler', 'memcached');
 ini_set('session.save_path', $app['config']['elastiCacheEndpoint']);

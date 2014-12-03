@@ -152,7 +152,8 @@
                     "deployCode": {
                         "packages": {
                             "yum": {
-                                "git": []
+                                "git": [],
+                                "php55-pecl-memcached": []
                             }
                         },
                         "commands": {

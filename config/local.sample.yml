@@ -2,5 +2,6 @@ gitterToken: <token>
 gitterRoomId: <roomId>
 resumesBucket: <bucketName>
 applicantsTable: <tableName>
+elastiCacheEndpoint: <url>
 region: <availabilityRegion>
 to: <string || array of email addresses>

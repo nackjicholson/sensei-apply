@@ -192,6 +192,7 @@
                                     "gitterRoomId: {{gitterRoomId}}\n",
                                     "resumesBucket: {{resumesBucket}}\n",
                                     "resumesMetaTable: {{resumesMetaTable}}\n",
+                                    "elastiCacheEndpoint: {{elastiCacheAddress}}:{{elastiCachePort}}\n",
                                     "region: {{region}}\n",
                                     "to:\n",
                                     "{{#recipients}}  - {{.}}\n{{/recipients}}"
@@ -202,6 +203,8 @@
                                     "resumesBucket": {"Ref": "ResumesBucket"},
                                     "resumesMetaTable": {"Ref": "ResumesMetaTable"},
                                     "region": {"Ref": "AWS::Region"},
+                                    "elastiCacheAddress": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
+                                    "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]},
                                     "recipients": {"Ref": "EmailRecipients"}
                                 },
                                 "mode": "000644",
@@ -284,6 +287,27 @@
                 "Type": "CNAME",
                 "TTL": "900",
                 "ResourceRecords": [{"Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}]
+            }
+        },
+        "ElastiCacheCluster": {
+            "Type": "AWS::ElastiCache::CacheCluster",
+            "Properties": {
+                "Engine": "memcached",
+                "CacheNodeType": "cache.t2.micro",
+                "NumCacheNodes": "1",
+                "VpcSecurityGroupIds": [{"Fn::GetAtt": [ "ElastiCacheSecurityGroup", "GroupId"]}]
+            }
+        },
+        "ElastiCacheSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "ElastiCache Security Group",
+                "SecurityGroupIngress": [{
+                    "IpProtocol": "tcp",
+                    "FromPort": "11211",
+                    "ToPort": "11211",
+                    "SourceSecurityGroupName": {"Ref": "InstanceSecurityGroup"}
+                }]
             }
         },
         "InstanceSecurityGroup": {

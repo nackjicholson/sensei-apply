@@ -206,7 +206,7 @@
                                 "context": {
                                     "gitterToken": {"Ref": "GitterApiToken"},
                                     "gitterRoomId": {"Ref": "GitterRoomId"},
-                                    "route53Record": {"Ref": "Route53Record"},
+                                    "route53Record": {"Fn::Join": ["", [{"Ref": "Route53RecordName"}, ".energysensei.info."]]},
                                     "recipients": {"Ref": "EmailRecipients"},
                                     "resumesBucket": {"Ref": "s3Resumes"},
                                     "resumesMetaTable": {"Ref": "ddbResumesMeta"},

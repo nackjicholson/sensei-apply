@@ -194,23 +194,25 @@
                                 "content": {"Fn::Join": ["", [
                                     "gitterToken: {{gitterToken}}\n",
                                     "gitterRoomId: {{gitterRoomId}}\n",
+                                    "fromAddress: resumes@{{route53Record}}\n",
+                                    "recipients:\n",
+                                    "{{#recipients}}  - {{.}}\n{{/recipients}}",
                                     "resumesBucket: {{resumesBucket}}\n",
                                     "resumesMetaTable: {{resumesMetaTable}}\n",
                                     "elastiCacheHost: {{elastiCacheHost}}\n",
                                     "elastiCachePort: {{elastiCachePort}}\n",
-                                    "region: {{region}}\n",
-                                    "to:\n",
-                                    "{{#recipients}}  - {{.}}\n{{/recipients}}"
+                                    "region: {{region}}\n"
                                 ]]},
                                 "context": {
                                     "gitterToken": {"Ref": "GitterApiToken"},
                                     "gitterRoomId": {"Ref": "GitterRoomId"},
+                                    "route53Record": {"Ref": "Route53Record"},
+                                    "recipients": {"Ref": "EmailRecipients"},
                                     "resumesBucket": {"Ref": "s3Resumes"},
                                     "resumesMetaTable": {"Ref": "ddbResumesMeta"},
                                     "region": {"Ref": "AWS::Region"},
                                     "elastiCacheHost": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
-                                    "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]},
-                                    "recipients": {"Ref": "EmailRecipients"}
+                                    "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]}
                                 },
                                 "mode": "000644",
                                 "owner": "ec2-user",
@@ -284,7 +286,7 @@
                 }
             }
         },
-        "Route53Group": {
+        "Route53Record": {
             "Type": "AWS::Route53::RecordSet",
             "Properties": {
                 "HostedZoneId": "/hostedzone/Z1DQ4UYB8BEAYN",

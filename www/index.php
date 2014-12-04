@@ -70,8 +70,7 @@ $app['logger'] = $app->share(function($app) {
     $chatBuffer = new BufferHandler($gitterHandler);
 
     $subject = 'Sensei Apply -- Resume Received';
-    $from = 'no-reply@apply.energysensei.info';
-    $mailHandler = new NativeMailerHandler($config['to'], $subject, $from, Logger::NOTICE);
+    $mailHandler = new NativeMailerHandler($config['recipients'], $subject, $config['fromAddress'], Logger::NOTICE);
     $mailHandler->setContentType('text/html');
     $mailHandler->setFormatter(new HtmlFormatter());
     $mailBuffer = new BufferHandler($mailHandler);

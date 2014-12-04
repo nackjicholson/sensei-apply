@@ -196,7 +196,8 @@
                                     "gitterRoomId: {{gitterRoomId}}\n",
                                     "resumesBucket: {{resumesBucket}}\n",
                                     "resumesMetaTable: {{resumesMetaTable}}\n",
-                                    "elastiCacheEndpoint: {{elastiCacheAddress}}:{{elastiCachePort}}\n",
+                                    "elastiCacheHost: {{elastiCacheHost}}\n",
+                                    "elastiCachePort: {{elastiCachePort}}\n",
                                     "region: {{region}}\n",
                                     "to:\n",
                                     "{{#recipients}}  - {{.}}\n{{/recipients}}"
@@ -207,7 +208,7 @@
                                     "resumesBucket": {"Ref": "s3Resumes"},
                                     "resumesMetaTable": {"Ref": "ddbResumesMeta"},
                                     "region": {"Ref": "AWS::Region"},
-                                    "elastiCacheAddress": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
+                                    "elastiCacheHost": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
                                     "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]},
                                     "recipients": {"Ref": "EmailRecipients"}
                                 },

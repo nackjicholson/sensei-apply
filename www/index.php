@@ -17,6 +17,7 @@ use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\TwigServiceProvider;
 use Silex\Provider\UrlGeneratorServiceProvider;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Storage\Handler\MemcachedSessionHandler;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -52,6 +53,15 @@ $app['s3'] = $app->share(function($app) {
 
 $app['dynamoDb'] = $app->share(function($app) {
     return DynamoDbClient::factory(['region' => $app['config']['region']]);
+});
+
+$app['session.storage.handler'] = $app->share(function($app) {
+    $config = $app['config'];
+
+    $memcached = new Memcached();
+    $memcached->addServer($config['elastiCacheHost'], $config['elastiCachePort']);
+
+    return new MemcachedSessionHandler($memcached);
 });
 
 $app['logger'] = $app->share(function($app) {
@@ -92,10 +102,5 @@ $app->mount('/', $resumesControllerProvider);
 $applyApiControllerProvider = new ApplyApiControllerProvider();
 $app->register($applyApiControllerProvider);
 $app->mount('/api/v1/', $applyApiControllerProvider);
-
-// Set up memcached session handling via ElastiCache cluster.
-$app['session.storage.handler'] = null;
-ini_set('session.save_handler', 'memcached');
-ini_set('session.save_path', $app['config']['elastiCacheEndpoint']);
 
 $app->run();

@@ -270,7 +270,13 @@
                         " --stack ", {"Ref": "AWS::StackName"},
                         " --resource LaunchConfig\n"
                     ]]}
-                }
+                },
+                "Tags": [
+                    {"Key": "Name", "Value": "apply"},
+                    {"Key": "Channel", "Value": {"Ref": "Channel"}},
+                    {"Key": "Environment", "Value": {"Ref": "Environment"}},
+                    {"Key": "System", "Value": "apply"}
+                ]
             }
         },
         "WebServerGroup": {

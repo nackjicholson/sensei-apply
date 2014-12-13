@@ -2,7 +2,6 @@
 
 namespace SenseiApply\Controllers\Api\V1;
 
-use Aws\DynamoDb\Exception\ResourceNotFoundException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,56 +56,6 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
 
     public function testStore()
     {
-        $this->s3
-            ->expects($this->once())
-            ->method('doesBucketExist')
-            ->with('test.bucket')
-            ->willReturn(false);
-
-        $this->s3
-            ->expects($this->once())
-            ->method('createBucket')
-            ->with(['Bucket' => 'test.bucket', 'LocationConstraint' => 'test.region']);
-
-        $this->s3
-            ->expects($this->once())
-            ->method('waitUntil')
-            ->with('BucketExists', ['Bucket' => 'test.bucket']);
-
-        $this->dynamoDb
-            ->expects($this->once())
-            ->method('describeTable')
-            ->with(['TableName' => 'test.table'])
-            ->willThrowException(new ResourceNotFoundException());
-
-        $this->dynamoDb
-            ->expects($this->once())
-            ->method('createTable')
-            ->with([
-                'TableName' => 'test.table',
-                'AttributeDefinitions' => [
-                    [
-                        'AttributeName' => 'key',
-                        'AttributeType' => 'S'
-                    ]
-                ],
-                'KeySchema' => [
-                    [
-                        'AttributeName' => 'key',
-                        'KeyType' => 'HASH'
-                    ]
-                ],
-                'ProvisionedThroughput' => [
-                    'ReadCapacityUnits' => 1,
-                    'WriteCapacityUnits' => 1
-                ]
-            ]);
-
-        $this->dynamoDb
-            ->expects($this->once())
-            ->method('waitUntil')
-            ->with('TableExists', ['TableName' => 'test.table']);
-
         $pathname = __DIR__ . '/Fixtures/test.gif';
 
         $resumeClientOriginalName = 'test.filename';
@@ -190,7 +139,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     {
         $this->dynamoDb = $this
             ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
-            ->setMethods(['describeTable', 'createTable', 'waitUntil', 'formatAttributes', 'putItem'])
+            ->setMethods(['formatAttributes', 'putItem'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -198,7 +147,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
 
         $this->s3 = $this
             ->getMockBuilder('Aws\\S3\\S3Client')
-            ->setMethods(['doesBucketExist', 'createBucket', 'waitUntil', 'doesObjectExist', 'upload'])
+            ->setMethods(['doesObjectExist', 'upload'])
             ->disableOriginalConstructor()
             ->getMock();
 

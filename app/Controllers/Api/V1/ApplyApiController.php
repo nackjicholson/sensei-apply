@@ -3,7 +3,6 @@
 namespace SenseiApply\Controllers\Api\V1;
 
 use Aws\DynamoDb\DynamoDbClient;
-use Aws\DynamoDb\Exception\ResourceNotFoundException;
 use Aws\S3\S3Client;
 use Psr\Log\LoggerAwareTrait;
 use Silex\Application;
@@ -70,10 +69,6 @@ class ApplyApiController
     {
         $tableName = $this->config['resumesMetaTable'];
         $bucket = $this->config['resumesBucket'];
-        $region = $this->config['region'];
-
-        $this->ensureBucketExists($bucket, $region);
-        $this->ensureTableExists($tableName);
 
         $name = $request->request->get('profile[name]', null, true);
 
@@ -103,52 +98,6 @@ class ApplyApiController
 
         $this->logger->notice("New resume received from $name, view here $resumeLink");
         return $app->json("Thank you for applying via api {$name}");
-    }
-
-    /**
-     * @param $bucket
-     * @param $region
-     */
-    private function ensureBucketExists($bucket, $region)
-    {
-        if (!$this->s3->doesBucketExist($bucket)) {
-            $this->s3->createBucket(['Bucket' => $bucket, 'LocationConstraint' => $region]);
-            $this->s3->waitUntil('BucketExists', ['Bucket' => $bucket]);
-        }
-    }
-
-    /**
-     * @param $tableName
-     */
-    private function ensureTableExists($tableName)
-    {
-        try {
-            $this->dynamoDb->describeTable(['TableName' => $tableName]);
-        } catch (ResourceNotFoundException $resourceNotFoundException) {
-            $this->dynamoDb->createTable([
-                'TableName' => $tableName,
-                'AttributeDefinitions' => [
-                    [
-                        'AttributeName' => 'key',
-                        'AttributeType' => 'S'
-                    ]
-                ],
-                'KeySchema' => [
-                    [
-                        'AttributeName' => 'key',
-                        'KeyType' => 'HASH'
-                    ]
-                ],
-                'ProvisionedThroughput' => [
-                    'ReadCapacityUnits' => 1,
-                    'WriteCapacityUnits' => 1
-                ]
-            ]);
-        }
-
-        $this->dynamoDb->waitUntil('TableExists', array(
-            'TableName' => $tableName
-        ));
     }
 
     /**

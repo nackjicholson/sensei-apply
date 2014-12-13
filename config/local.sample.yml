@@ -1,10 +1,10 @@
-gitterToken: <token>
-gitterRoomId: <roomId>
-fromAddress: resumes@<url>
-recipients: <string || array of email addresses>
-resumesBucket: <bucketName>
-applicantsTable: <tableName>
-elastiCacheHost: <url>
-elastiCachePort: <int>
-region: <availabilityRegion>
-
+gitterToken: {{gitterToken}}
+gitterRoomId: {{gitterRoomId}}
+fromAddress: resumes@{{route53Record}}
+recipients:
+  - {{recipient}}
+resumesBucket: {{resumesBucket}}
+resumesMetaTable: {{resumesMetaTable}}
+elastiCacheHost: {{elastiCacheHost}}
+elastiCachePort: {{elastiCachePort}}
+region: {{region}}

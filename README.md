@@ -1,6 +1,3 @@
-sensei-apply
-============
-
 # Sensei Application API
 Apply by API to work at Cascade Energy.
 

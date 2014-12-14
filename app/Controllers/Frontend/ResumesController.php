@@ -1,6 +1,6 @@
 <?php
 
-namespace SenseiApply\Controllers;
+namespace SenseiApply\Controllers\Frontend;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Iterator\ItemIterator;

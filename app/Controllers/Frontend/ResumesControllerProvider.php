@@ -1,6 +1,6 @@
 <?php
 
-namespace SenseiApply\Controllers;
+namespace SenseiApply\Controllers\Frontend;
 
 use Silex\Application;
 use Silex\ControllerCollection;

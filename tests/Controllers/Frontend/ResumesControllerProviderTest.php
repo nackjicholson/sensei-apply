@@ -1,6 +1,6 @@
 <?php
 
-namespace SenseiApply\Controllers;
+namespace SenseiApply\Controllers\Frontend;
 
 use Silex\Application;
 use Silex\Provider\ServiceControllerServiceProvider;
@@ -27,7 +27,7 @@ class ResumesControllerProviderTest extends \PHPUnit_Framework_TestCase
 
         $resumesController = $app['resumes.controller'];
 
-        $this->assertInstanceOf('SenseiApply\\Controllers\\ResumesController', $resumesController);
+        $this->assertInstanceOf('SenseiApply\\Controllers\\Frontend\\ResumesController', $resumesController);
         $this->assertAttributeInstanceOf('Aws\\DynamoDb\\DynamoDbClient', 'dynamoDb', $resumesController);
         $this->assertAttributeInstanceOf('Aws\\S3\\S3Client', 's3', $resumesController);
         $this->assertAttributeEquals('test.table', 'tableName', $resumesController);

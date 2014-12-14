@@ -9,7 +9,7 @@ use Monolog\Logger;
 use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
-use SenseiApply\Controllers\ResumesControllerProvider;
+use SenseiApply\Controllers\Frontend\ResumesControllerProvider;
 use SenseiApply\Security\ListUserProvider;
 use Silex\Application;
 use Silex\Provider\SecurityServiceProvider;

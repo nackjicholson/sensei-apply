@@ -65,7 +65,7 @@ class ApplyApiController
      *
      * @return JsonResponse
      */
-    public function store(Application $app, Request $request)
+    public function apply(Application $app, Request $request)
     {
         $tableName = $this->config['resumesMetaTable'];
         $bucket = $this->config['resumesBucket'];

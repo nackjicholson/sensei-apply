@@ -41,7 +41,7 @@ class ApplyApiControllerProviderTest extends \PHPUnit_Framework_TestCase
     public function testConnectsApplyApiRoutes()
     {
         $applyApiController = $this->getMock(__NAMESPACE__ . '\\ApplyApiController');
-        $applyApiController->expects($this->once())->method('store')->with();
+        $applyApiController->expects($this->once())->method('apply')->with();
 
         $app = new Application();
 

@@ -54,7 +54,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $this->sut->setUrlGenerator($this->urlGenerator);
     }
 
-    public function testStore()
+    public function testApply()
     {
         $pathname = __DIR__ . '/Fixtures/test.gif';
 
@@ -132,7 +132,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
             ->with('Thank you for applying via api test.name')
             ->willReturn($response);
 
-        $this->assertSame($response, $this->sut->store($app, $request));
+        $this->assertSame($response, $this->sut->apply($app, $request));
     }
 
     private function constructMocks()

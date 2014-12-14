@@ -45,7 +45,7 @@ class ApplyApiControllerProvider implements ControllerProviderInterface, Service
         /** @var ControllerCollection $controllers */
         $controllers = $app['controllers_factory'];
 
-        $controllers->post('/apply', 'api.apply.controller:store');
+        $controllers->post('/apply', 'api.apply.controller:apply');
 
         return $controllers;
     }

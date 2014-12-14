@@ -172,6 +172,20 @@
                     {"Key": "Environment", "Value": {"Ref": "Environment"}, "PropagateAtLaunch": "true"},
                     {"Key": "System", "Value": "apply", "PropagateAtLaunch": "true"}
                 ]
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Timeout": "PT15M",
+                    "Count": "1"
+                }
+            },
+            "UpdatePolicy": {
+                "AutoScalingRollingUpdate": {
+                    "MinInstancesInService": "1",
+                    "MaxBatchSize": "1",
+                    "PauseTime": "PT15M",
+                    "WaitOnResourceSignals": "true"
+                }
             }
         },
         "LaunchConfig": {
@@ -303,10 +317,16 @@
                     [
                         "#!/bin/bash -xe\n",
                         "yum update -y aws-cfn-bootstrap\n",
+
                         "/opt/aws/bin/cfn-init -v ",
                         " --region ", {"Ref": "AWS::Region"},
                         " --stack ", {"Ref": "AWS::StackName"},
-                        " --resource LaunchConfig\n"
+                        " --resource LaunchConfig\n",
+
+                        "/opt/aws/bin/cfn-signal -e $? ",
+                        " --region ", { "Ref" : "AWS::Region" },
+                        " --stack ", { "Ref" : "AWS::StackName" },
+                        " --resource WebServerGroup\n"
                     ]]}
                 }
             }

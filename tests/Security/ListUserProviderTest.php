@@ -1,6 +1,6 @@
 <?php
 
-namespace SenseiApply\Security;
+namespace Cascade\Security;
 
 use Symfony\Component\Security\Core\User\User;
 

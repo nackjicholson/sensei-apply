@@ -11,7 +11,7 @@ use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
 use SenseiApply\Controllers\Frontend\ResumesControllerProvider;
-use SenseiApply\Security\ListUserProvider;
+use Cascade\Security\ListUserProvider;
 use Silex\Application;
 use Silex\Provider\SecurityServiceProvider;
 use Silex\Provider\ServiceControllerServiceProvider;

@@ -13,8 +13,8 @@ Send an application.
 
 + Request
 
-`profile[name]`: String e.g. "Bill Murray"  
-`resume`: multipart/form-data upload of a PDF file.
+    `profile[name]`: String e.g. "Bill Murray"  
+    `resume`: multipart/form-data upload of a PDF file.
 
 + Response 200 (text/plain)
 

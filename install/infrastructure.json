@@ -415,8 +415,7 @@
                 "SecurityGroupIngress": [
                     {"IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0"},
                     {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "50.204.9.158/24"},
-                    {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "98.246.154.178/24"},
-                    {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "173.11.14.121/24"}
+                    {"IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "98.246.154.178/24"}
                 ]
             }
         }

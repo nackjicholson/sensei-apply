@@ -1,6 +1,6 @@
 # Sensei Application API
 Apply by API to work at Cascade Energy.  
-https://apply.energysensei.info
+http://apply.energysensei.info
 
 # Applications [/api/v1/apply]
 

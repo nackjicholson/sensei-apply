@@ -10,6 +10,7 @@ use Nack\FileParser\FileParser;
 use Nack\Monolog\Handler\GitterImHandler;
 use SenseiApply\Controllers\Api\V1\ApplyApiControllerProvider;
 use SenseiApply\Controllers\ResumesControllerProvider;
+use SenseiApply\Security\ListUserProvider;
 use Silex\Application;
 use Silex\Provider\SecurityServiceProvider;
 use Silex\Provider\ServiceControllerServiceProvider;
@@ -31,21 +32,33 @@ $app->register(new UrlGeneratorServiceProvider());
 $app->register(new SecurityServiceProvider());
 $app->register(new SessionServiceProvider());
 
+$app['fileParser'] = $app->share(function() {
+   return new FileParser();
+});
+
+$app['users'] = $app->share(function($app) {
+    /** @var FileParser $fileParser */
+    $fileParser = $app['fileParser'];
+    $userList = $fileParser->yaml(__DIR__ . '/../config/users.yml');
+
+    return new ListUserProvider($userList);
+});
+
+$app['config'] = $app->share(function($app) {
+    /** @var FileParser $fileParser */
+    $fileParser = $app['fileParser'];
+
+    return $fileParser->yaml(__DIR__ . '/../config/local.yml');
+});
+
 $app['security.firewalls'] = array(
     'secured' => array(
         'pattern' => '^/resumes',
         'form' => array('login_path' => '/login', 'check_path' => '/resumes/login_check'),
         'logout' => array('logout_path' => '/resumes/logout'),
-        'users' => array(
-            'admin' => array('ROLE_ADMIN', '5FZ2Z8QIkA7UTZ4BYkoC+GsReLf569mSKDsfods6LYQ8t+a8EW9oaircfMpmaLbPBh4FOBiiFyLfuZmTSUwzZg=='),
-        ),
+        'users' => $app['users']
     ),
 );
-
-$app['config'] = $app->share(function() {
-    $fileParser = new FileParser();
-    return $fileParser->yaml(__DIR__ . '/../config/local.yml');
-});
 
 $app['s3'] = $app->share(function($app) {
     return S3Client::factory(['region' => $app['config']['region']]);

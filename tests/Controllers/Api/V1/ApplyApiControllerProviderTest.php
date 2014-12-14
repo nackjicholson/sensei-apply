@@ -18,6 +18,7 @@ class ApplyApiControllerProviderTest extends \PHPUnit_Framework_TestCase
                 ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
                 ->disableOriginalConstructor()
                 ->getMock(),
+            'dynamoDb.marshaler' => $this->getMock('Aws\\DynamoDb\\Marshaler'),
             'logger' => $this->getMock('Psr\\Log\\LoggerInterface'),
             's3' => $this
                 ->getMockBuilder('Aws\\S3\\S3Client')
@@ -33,6 +34,7 @@ class ApplyApiControllerProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('SenseiApply\\Controllers\\Api\\V1\\ApplyApiController', $applyApiController);
         $this->assertAttributeEquals(['foo' => 'bar'], 'config', $applyApiController);
         $this->assertAttributeInstanceOf('Aws\\DynamoDb\\DynamoDbClient', 'dynamoDb', $applyApiController);
+        $this->assertAttributeInstanceOf('Aws\\DynamoDb\\Marshaler', 'marshaler', $applyApiController);
         $this->assertAttributeInstanceOf('Aws\\S3\\S3Client', 's3', $applyApiController);
         $this->assertAttributeInstanceOf('Psr\\Log\\LoggerInterface', 'logger', $applyApiController);
         $this->assertAttributeInstanceOf('Symfony\\Component\\Routing\\Generator\\UrlGenerator', 'urlGenerator', $applyApiController);

@@ -3,6 +3,7 @@
 namespace SenseiApply\Controllers\Api\V1;
 
 use Aws\DynamoDb\DynamoDbClient;
+use Aws\DynamoDb\Marshaler;
 use Aws\S3\S3Client;
 use Psr\Log\LoggerAwareTrait;
 use Silex\Application;
@@ -20,6 +21,9 @@ class ApplyApiController
 
     /** @var DynamoDbClient */
     private $dynamoDb;
+
+    /** @var Marshaler */
+    private $marshaler;
 
     /** @var S3Client */
     private $s3;
@@ -41,6 +45,14 @@ class ApplyApiController
     public function setDynamoDb($dynamoDb)
     {
         $this->dynamoDb = $dynamoDb;
+    }
+
+    /**
+     * @param Marshaler $marshaler
+     */
+    public function setMarshaler($marshaler)
+    {
+        $this->marshaler = $marshaler;
     }
 
     /**
@@ -87,7 +99,7 @@ class ApplyApiController
 
         $this->dynamoDb->putItem([
             'TableName' => $tableName,
-            'Item' => $this->dynamoDb->formatAttributes([
+            'Item' => $this->marshaler->marshalItem([
                 'key' => $key,
                 'name' => $name,
                 'visible' => true,

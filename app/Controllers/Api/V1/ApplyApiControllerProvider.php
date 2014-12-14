@@ -26,6 +26,7 @@ class ApplyApiControllerProvider implements ControllerProviderInterface, Service
             $applyApiController = new ApplyApiController();
             $applyApiController->setConfig($app['config']);
             $applyApiController->setDynamoDb($app['dynamoDb']);
+            $applyApiController->setMarshaler($app['dynamoDb.marshaler']);
             $applyApiController->setLogger($app['logger']);
             $applyApiController->setS3($app['s3']);
             $applyApiController->setUrlGenerator($app['url_generator']);

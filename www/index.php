@@ -1,6 +1,7 @@
 <?php
 
 use Aws\DynamoDb\DynamoDbClient;
+use Aws\DynamoDb\Marshaler;
 use Aws\S3\S3Client;
 use Monolog\Formatter\HtmlFormatter;
 use Monolog\Handler\BufferHandler;
@@ -66,6 +67,10 @@ $app['s3'] = $app->share(function($app) {
 
 $app['dynamoDb'] = $app->share(function($app) {
     return DynamoDbClient::factory(['region' => $app['config']['region']]);
+});
+
+$app['dynamoDb.marshaler'] = $app->share(function() {
+    return new Marshaler();
 });
 
 $app['session.storage.handler'] = $app->share(function($app) {

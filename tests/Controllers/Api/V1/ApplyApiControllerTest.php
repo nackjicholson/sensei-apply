@@ -34,6 +34,9 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     private $dynamoDb;
 
     /** @var \PHPUnit_Framework_MockObject_MockObject */
+    private $marshaler;
+
+    /** @var \PHPUnit_Framework_MockObject_MockObject */
     private $logger;
 
     /** @var \PHPUnit_Framework_MockObject_MockObject */
@@ -49,6 +52,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $this->sut = new ApplyApiController();
         $this->sut->setConfig(static::$config);
         $this->sut->setDynamoDb($this->dynamoDb);
+        $this->sut->setMarshaler($this->marshaler);
         $this->sut->setLogger($this->logger);
         $this->sut->setS3($this->s3);
         $this->sut->setUrlGenerator($this->urlGenerator);
@@ -86,9 +90,9 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
 
         $this->s3->expects($this->once())->method('upload')->with('test.bucket', self::NEW_UNIQUE_KEY);
 
-        $this->dynamoDb
+        $this->marshaler
             ->expects($this->once())
-            ->method('formatAttributes')
+            ->method('marshalItem')
             ->with([
                 'key' => self::NEW_UNIQUE_KEY,
                 'name' => 'test.name',
@@ -139,11 +143,13 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
     {
         $this->dynamoDb = $this
             ->getMockBuilder('Aws\\DynamoDb\\DynamoDbClient')
-            ->setMethods(['formatAttributes', 'putItem'])
+            ->setMethods(['putItem'])
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->logger = $this->getMock('Psr\\Log\\LoggerInterface');
+
+        $this->marshaler = $this->getMock('Aws\\DynamoDb\\Marshaler');
 
         $this->s3 = $this
             ->getMockBuilder('Aws\\S3\\S3Client')

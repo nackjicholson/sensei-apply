@@ -9,18 +9,17 @@ Send an application.
 + Headers
     
     Accept: application/json
+    Content-Type: multipart/form-data
 
 + Request
 
-```json
-{
-    "profile": {"name": "Will Vaughn"},
-    "resume": "file content"
-}
-```
+`profile[name]`: String e.g. "Bill Murray"  
+`resume`: multipart/form-data upload of a PDF file.
 
 + Response 200 (text/plain)
 
 ```json
-"Thank you for applying via api *profile.name*"
+{
+    "message": "Thank you for applying via api *profile[name]*"
+}
 ```

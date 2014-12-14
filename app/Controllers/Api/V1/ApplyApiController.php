@@ -60,6 +60,12 @@ class ApplyApiController
     }
 
     /**
+     * Apply API endpoint.
+     *
+     * Saves resume file to S3 bucket, stores some meta data about the resume
+     * to DynamoDb, and sends out a Logger::NOTICE to notify monolog handlers
+     * that a resume was received.
+     *
      * @param Application $app
      * @param Request $request
      *
@@ -97,7 +103,8 @@ class ApplyApiController
         );
 
         $this->logger->notice("New resume received from $name, view here $resumeLink");
-        return $app->json("Thank you for applying via api {$name}");
+
+        return $app->json(['message' => "Thank you for applying via api {$name}"]);
     }
 
     /**

@@ -129,7 +129,7 @@ class ApplyApiControllerTest extends \PHPUnit_Framework_TestCase
         $app
             ->expects($this->once())
             ->method('json')
-            ->with('Thank you for applying via api test.name')
+            ->with(['message' => 'Thank you for applying via api test.name'])
             ->willReturn($response);
 
         $this->assertSame($response, $this->sut->apply($app, $request));

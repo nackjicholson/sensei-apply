@@ -12,6 +12,10 @@
             "Description": "The branch in the repo to install",
             "Default": "master"
         },
+        "DockerImage": {
+            "Type": "String",
+            "Description": "Docker image location i.e. <username>/<repo> on dockerhub."
+        },
         "EmailRecipients": {
             "Type": "CommaDelimitedList",
             "Description": "Comma-delimited list of email addresses to notify."
@@ -194,79 +198,9 @@
                 "Comment": "Ensure application is ready.",
                 "AWS::CloudFormation::Init": {
                     "configSets": {
-                        "default": ["deployCode", "composeYaml"]
+                        "default": ["hostSetup", "dockerSetup", "dockerRun", "cfnHup"]
                     },
-                    "deployCode": {
-                        "packages": {
-                            "yum": {
-                                "httpd24": [],
-                                "php55": [],
-                                "php55-pecl-memcached": [],
-                                "git": []
-                            }
-                        },
-                        "files": {
-                            "/etc/cfn/cfn-hup.conf": {
-                                "content": {"Fn::Join": ["", [
-                                    "[main]\n",
-                                    "stack=", {"Ref": "AWS::StackId"}, "\n",
-                                    "region=", {"Ref": "AWS::Region"}, "\n"
-                                ]]},
-                                "mode": "000400",
-                                "owner": "root",
-                                "group": "root"
-                            },
-
-                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
-                                "content": {"Fn::Join": ["", [
-                                    "[cfn-auto-reloader-hook]\n",
-                                    "triggers=post.update\n",
-                                    "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
-                                    "action=/opt/aws/bin/cfn-init -v ",
-                                    "         --stack ", {"Ref": "AWS::StackName"},
-                                    "         --resource LaunchConfig ",
-                                    "         --region ", {"Ref": "AWS::Region"}, "\n",
-                                    "runas=root\n"
-                                ]]}
-                            }
-                        },
-                        "commands": {
-                            "000_make_working_dir": {
-                                "command": "mkdir /var/cascade"
-                            },
-                            "100_clone_repo": {
-                                "command": {"Fn::Join": ["", ["git clone -b ", {"Ref": "GitBranch"}, " ", {"Ref": "GitRemote"}]]},
-                                "cwd": "/var/cascade"
-                            },
-                            "200_copy_httpd_conf": {
-                                "command": "cp sensei-apply.conf /etc/httpd/conf.d/sensei-apply.conf",
-                                "cwd": "/var/cascade/sensei-apply/install"
-                            },
-                            "300_get_composer": {
-                                "command": "curl -sS https://getcomposer.org/installer | php",
-                                "cwd": "/var/cascade/sensei-apply"
-                            },
-                            "400_run_composer": {
-                                "command": "php composer.phar install --no-dev --optimize-autoloader --prefer-dist --no-interaction",
-                                "cwd": "/var/cascade/sensei-apply",
-                                "env": {"COMPOSER_HOME": "/home/ec2-user"}
-                            },
-                            "500_change_ownership": {
-                                "command": "chown -R ec2-user:ec2-user /var/cascade"
-                            }
-                        },
-                        "services": {
-                            "sysvinit": {
-                                "httpd": {"enabled": "true", "ensureRunning": "true"},
-                                "cfn-hup": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true",
-                                    "files": ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
-                                }
-                            }
-                        }
-                    },
-                    "composeYaml": {
+                    "hostSetup": {
                         "files": {
                             "/var/cascade/sensei-apply/config/local.yml": {
                                 "content": {"Fn::Join": ["", [
@@ -292,14 +226,70 @@
                                     "elastiCacheHost": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
                                     "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]}
                                 },
-                                "mode": "000644",
-                                "owner": "ec2-user",
-                                "group": "ec2-user"
+                                "mode": "000644"
+                            },
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {"Fn::Join": ["", [
+                                    "[main]\n",
+                                    "stack=", {"Ref": "AWS::StackId"}, "\n",
+                                    "region=", {"Ref": "AWS::Region"}, "\n"
+                                ]]},
+                                "mode": "000400",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {"Fn::Join": ["", [
+                                    "[cfn-auto-reloader-hook]\n",
+                                    "triggers=post.update\n",
+                                    "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                                    "action=/opt/aws/bin/cfn-init -v ",
+                                    "         --stack ", {"Ref": "AWS::StackName"},
+                                    "         --resource LaunchConfig ",
+                                    "         --region ", {"Ref": "AWS::Region"}, "\n",
+                                    "runas=root\n"
+                                ]]}
                             }
+                        }
+                    },
+                    "dockerSetup": {
+                        "packages": {
+                            "yum": {"docker": []}
                         },
+                        "services": {
+                            "sysvinit": {
+                                "docker": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        }
+                    },
+                    "dockerRun": {
                         "commands": {
-                            "httpd_reload": {
-                                "command": "service httpd reload"
+                            "00-pull": {
+                                "command": {"Fn::Join": [" ", ["docker pull", {"Ref": "DockerImage"}]]}
+                            },
+                            "01-run": {
+                                "command": {"Fn::Join": [
+                                    " ",
+                                    [
+                                        "docker run -d -p 80:80",
+                                        "-v /var/cascade/sensei-apply/config/local.yml:/var/www/sensei-apply/config/local.yml",
+                                        {"Ref": "DockerImage"}
+                                    ]
+                                ]}
+                            }
+                        }
+                    },
+                    "cfnHup": {
+                        "services": {
+                            "sysvinit": {
+                                "cfn-hup": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true",
+                                    "files": ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
+                                }
                             }
                         }
                     }
@@ -324,8 +314,8 @@
                         " --resource LaunchConfig\n",
 
                         "/opt/aws/bin/cfn-signal -e $? ",
-                        " --region ", { "Ref" : "AWS::Region" },
-                        " --stack ", { "Ref" : "AWS::StackName" },
+                        " --region ", {"Ref": "AWS::Region"},
+                        " --stack ", {"Ref": "AWS::StackName"},
                         " --resource WebServerGroup\n"
                     ]]}
                 }

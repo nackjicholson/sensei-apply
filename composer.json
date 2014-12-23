@@ -1,6 +1,6 @@
 {
     "name": "cascade/sensei-apply",
-    "license": "proprietary",
+    "license": "MIT",
     "authors": [
         {
             "name": "Will Vaughn",

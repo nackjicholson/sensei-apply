@@ -105,6 +105,10 @@ $app->get('/', function() use ($app) {
 })
 ->bind('homepage');
 
+$app->get('/healthcheck', function() use ($app) {
+    return $app->json(["message" => "successful"]);
+});
+
 $app->get('/login', function(Request $request) use ($app) {
     return $app['twig']->render('login.twig', array(
         'error' => $app['security.last_error']($request),

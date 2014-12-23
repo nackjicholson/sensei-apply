@@ -2,20 +2,6 @@
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Sensei apply cloud formation.",
     "Parameters": {
-        "GitRemote": {
-            "Type": "String",
-            "Description": "HTTPS or SSH remote to pull code from",
-            "Default": "https://github.com/CascadeEnergy/sensei-apply.git"
-        },
-        "GitBranch": {
-            "Type": "String",
-            "Description": "The branch in the repo to install",
-            "Default": "master"
-        },
-        "DockerImage": {
-            "Type": "String",
-            "Description": "Docker image location i.e. <username>/<repo> on dockerhub."
-        },
         "EmailRecipients": {
             "Type": "CommaDelimitedList",
             "Description": "Comma-delimited list of email addresses to notify."
@@ -48,6 +34,11 @@
             "Description": "The EC2 Key Pair to allow SSH access to the instances",
             "Type": "AWS::EC2::KeyPair::KeyName",
             "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        },
+        "DockerImage": {
+            "Type": "String",
+            "Description": "Docker image location i.e. <username>/<repo> on dockerhub.",
+            "Default": "nackjicholson/sensei-apply"
         }
     },
     "Conditions": {
@@ -76,7 +67,7 @@
                 }
             }
         },
-        "SenseiApplyRole": {
+        "iamSenseiApplyRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "AssumeRolePolicyDocument": {
@@ -100,18 +91,14 @@
                             "Statement": [
                                 {
                                     "Effect": "Allow",
-                                    "Action": [
-                                        "dynamodb:*"
-                                    ],
+                                    "Action": ["dynamodb:*"],
                                     "Resource": [
                                         {"Fn::Join": ["", ["arn:aws:dynamodb:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":", "table/", {"Ref": "ddbResumesMeta"}]]}
                                     ]
                                 },
                                 {
                                     "Effect": "Allow",
-                                    "Action": [
-                                        "s3:*"
-                                    ],
+                                    "Action": ["s3:*"],
                                     "Resource": [
                                         {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "s3Resumes"}]]},
                                         {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "s3Resumes"}, "/*"]]}
@@ -123,25 +110,23 @@
                 ]
             }
         },
-        "SenseiApplyProfile": {
+        "iamSenseiApplyProfile": {
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {
                 "Path": "/cascade/senseiApplyProfile/",
-                "Roles": [ { "Ref": "SenseiApplyRole" } ]
+                "Roles": [{"Ref": "iamSenseiApplyRole"}]
             }
         },
-        "DevelopmentWebServer": {
+        "ec2DevelopmentWebServer": {
             "Type": "AWS::EC2::Instance",
             "Condition": "IsDevelopmentEnvironment",
-            "DependsOn": "LaunchConfig",
+            "DependsOn": "asWebServerLaunchConfig",
             "Properties": {
                 "InstanceType": "t2.micro",
-                "IamInstanceProfile": {
-                    "Ref": "SenseiApplyProfile"
-                },
+                "IamInstanceProfile": {"Ref": "iamSenseiApplyProfile"},
                 "KeyName": {"Ref": "KeyName"},
                 "ImageId": "ami-b5a7ea85",
-                "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}],
+                "SecurityGroups": [{"Ref": "ec2InstanceSecurityGroup"}],
                 "UserData": {"Fn::Base64": {"Fn::Join": ["",
                     [
                         "#!/bin/bash -xe\n",
@@ -149,7 +134,8 @@
                         "/opt/aws/bin/cfn-init -v ",
                         " --region ", {"Ref": "AWS::Region"},
                         " --stack ", {"Ref": "AWS::StackName"},
-                        " --resource LaunchConfig\n"
+                        " --resource asWebServerLaunchConfig",
+                        " --configsets default,development\n"
                     ]]}
                 },
                 "Tags": [
@@ -160,16 +146,16 @@
                 ]
             }
         },
-        "WebServerGroup": {
+        "asWebServerGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Condition": "NotDevelopmentEnvironment",
             "Properties": {
                 "AvailabilityZones": { "Fn::GetAZs": {"Ref": "AWS::Region"}},
                 "DesiredCapacity": "2",
-                "LaunchConfigurationName": {"Ref": "LaunchConfig"},
+                "LaunchConfigurationName": {"Ref": "asWebServerLaunchConfig"},
                 "MinSize": "1",
                 "MaxSize": "3",
-                "LoadBalancerNames": [{"Ref": "ElasticLoadBalancer"}],
+                "LoadBalancerNames": [{"Ref": "elbLoadBalancer"}],
                 "Tags": [
                     {"Key": "Name", "Value": "apply", "PropagateAtLaunch": "true"},
                     {"Key": "Channel", "Value": {"Ref": "Channel"}, "PropagateAtLaunch": "true"},
@@ -192,13 +178,14 @@
                 }
             }
         },
-        "LaunchConfig": {
+        "asWebServerLaunchConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Metadata": {
-                "Comment": "Ensure application is ready.",
+                "Comment": "Configures and starts the application.",
                 "AWS::CloudFormation::Init": {
                     "configSets": {
-                        "default": ["hostSetup", "dockerSetup", "dockerRun", "cfnHup"]
+                        "default": ["hostSetup", "dockerSetup", "dockerRun", "cfnHup"],
+                        "development": ["devSetup"]
                     },
                     "hostSetup": {
                         "files": {
@@ -223,8 +210,8 @@
                                     "resumesBucket": {"Ref": "s3Resumes"},
                                     "resumesMetaTable": {"Ref": "ddbResumesMeta"},
                                     "region": {"Ref": "AWS::Region"},
-                                    "elastiCacheHost": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Address"]},
-                                    "elastiCachePort": {"Fn::GetAtt": ["ElastiCacheCluster", "ConfigurationEndpoint.Port"]}
+                                    "elastiCacheHost": {"Fn::GetAtt": ["elcCluster", "ConfigurationEndpoint.Address"]},
+                                    "elastiCachePort": {"Fn::GetAtt": ["elcCluster", "ConfigurationEndpoint.Port"]}
                                 },
                                 "mode": "000644"
                             },
@@ -242,10 +229,10 @@
                                 "content": {"Fn::Join": ["", [
                                     "[cfn-auto-reloader-hook]\n",
                                     "triggers=post.update\n",
-                                    "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                                    "path=Resources.asWebServerLaunchConfig.Metadata.AWS::CloudFormation::Init\n",
                                     "action=/opt/aws/bin/cfn-init -v ",
                                     "         --stack ", {"Ref": "AWS::StackName"},
-                                    "         --resource LaunchConfig ",
+                                    "         --resource asWebServerLaunchConfig ",
                                     "         --region ", {"Ref": "AWS::Region"}, "\n",
                                     "runas=root\n"
                                 ]]}
@@ -275,7 +262,11 @@
                                     " ",
                                     [
                                         "docker run -d -p 80:80",
-                                        "-v /var/cascade/sensei-apply/config/local.yml:/var/www/sensei-apply/config/local.yml",
+                                        {"Fn::If": [
+                                            "NotDevelopmentEnvironment",
+                                            "-v /var/cascade/sensei-apply/config/local.yml:/var/www/sensei-apply/config/local.yml",
+                                            "-v /var/cascade/sensei-apply/:/var/www/sensei-apply/"
+                                        ]},
                                         {"Ref": "DockerImage"}
                                     ]
                                 ]}
@@ -292,17 +283,27 @@
                                 }
                             }
                         }
+                    },
+                    "devSetup": {
+                        "packages": {
+                            "yum": {
+                                "php55": []
+                            }
+                        },
+                        "commands": {
+                            "change_ownership": {
+                                "command": "chown -R ec2-user:ec2-user /var/cascade"
+                            }
+                        }
                     }
                 }
             },
             "Properties": {
                 "InstanceType": "t2.micro",
-                "IamInstanceProfile": {
-                    "Ref": "SenseiApplyProfile"
-                },
+                "IamInstanceProfile": {"Ref": "iamSenseiApplyProfile"},
                 "KeyName": {"Ref": "KeyName"},
                 "ImageId": "ami-b5a7ea85",
-                "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}],
+                "SecurityGroups": [{"Ref": "ec2InstanceSecurityGroup"}],
                 "UserData": {"Fn::Base64": {"Fn::Join": ["",
                     [
                         "#!/bin/bash -xe\n",
@@ -311,37 +312,37 @@
                         "/opt/aws/bin/cfn-init -v ",
                         " --region ", {"Ref": "AWS::Region"},
                         " --stack ", {"Ref": "AWS::StackName"},
-                        " --resource LaunchConfig\n",
+                        " --resource asWebServerLaunchConfig\n",
 
                         "/opt/aws/bin/cfn-signal -e $? ",
                         " --region ", {"Ref": "AWS::Region"},
                         " --stack ", {"Ref": "AWS::StackName"},
-                        " --resource WebServerGroup\n"
+                        " --resource asWebServerGroup\n"
                     ]]}
                 }
             }
         },
-        "WebServerScaleUpPolicy": {
+        "asWebServerScaleUpPolicy": {
             "Type": "AWS::AutoScaling::ScalingPolicy",
             "Condition": "NotDevelopmentEnvironment",
             "Properties": {
                 "AdjustmentType": "ChangeInCapacity",
-                "AutoScalingGroupName": {"Ref": "WebServerGroup"},
+                "AutoScalingGroupName": {"Ref": "asWebServerGroup"},
                 "Cooldown": "60",
                 "ScalingAdjustment": "1"
             }
         },
-        "WebServerScaleDownPolicy": {
+        "asWebServerScaleDownPolicy": {
             "Type": "AWS::AutoScaling::ScalingPolicy",
             "Condition": "NotDevelopmentEnvironment",
             "Properties": {
                 "AdjustmentType": "ChangeInCapacity",
-                "AutoScalingGroupName": {"Ref": "WebServerGroup"},
+                "AutoScalingGroupName": {"Ref": "asWebServerGroup"},
                 "Cooldown": "60",
                 "ScalingAdjustment": "-1"
             }
         },
-        "ElasticLoadBalancer": {
+        "elbLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Condition": "NotDevelopmentEnvironment",
             "Properties": {
@@ -355,7 +356,7 @@
                     }
                 ],
                 "HealthCheck": {
-                    "Target": "HTTP:80/login",
+                    "Target": "HTTP:80/healthcheck",
                     "Interval": "30",
                     "Timeout": "5",
                     "HealthyThreshold": "3",
@@ -363,7 +364,7 @@
                 }
             }
         },
-        "Route53Record": {
+        "r53Record": {
             "Type": "AWS::Route53::RecordSet",
             "Properties": {
                 "HostedZoneId": "/hostedzone/Z1DQ4UYB8BEAYN",
@@ -372,21 +373,21 @@
                 "TTL": "900",
                 "ResourceRecords": [{"Fn::If": [
                     "NotDevelopmentEnvironment",
-                    {"Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]},
-                    {"Fn::GetAtt": ["DevelopmentWebServer", "PublicDnsName"]}
+                    {"Fn::GetAtt": ["elbLoadBalancer", "DNSName"]},
+                    {"Fn::GetAtt": ["ec2DevelopmentWebServer", "PublicDnsName"]}
                 ]}]
             }
         },
-        "ElastiCacheCluster": {
+        "elcCluster": {
             "Type": "AWS::ElastiCache::CacheCluster",
             "Properties": {
                 "Engine": "memcached",
                 "CacheNodeType": "cache.t2.micro",
                 "NumCacheNodes": "1",
-                "VpcSecurityGroupIds": [{"Fn::GetAtt": [ "ElastiCacheSecurityGroup", "GroupId"]}]
+                "VpcSecurityGroupIds": [{"Fn::GetAtt": [ "ec2ElasticacheSecurityGroup", "GroupId"]}]
             }
         },
-        "ElastiCacheSecurityGroup": {
+        "ec2ElasticacheSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "ElastiCache Security Group",
@@ -394,11 +395,11 @@
                     "IpProtocol": "tcp",
                     "FromPort": "11211",
                     "ToPort": "11211",
-                    "SourceSecurityGroupName": {"Ref": "InstanceSecurityGroup"}
+                    "SourceSecurityGroupName": {"Ref": "ec2InstanceSecurityGroup"}
                 }]
             }
         },
-        "InstanceSecurityGroup": {
+        "ec2InstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "Enable HTTP access via port 80",

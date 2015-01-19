@@ -14,21 +14,20 @@
             "Type": "String",
             "Description": "Id of the Gitter chat room to notify."
         },
+        "Route53HostedZoneId": {
+          "Type": "String",
+          "Description": "The Hosted Zone Id of the route 53 domain to make a record in"
+        },
         "Route53RecordName": {
             "Type": "String",
-            "Description": "Route 53 record name to use as DNS target. Cannot end with a period. (will be appended with .energysensei.info.)",
+            "Description": "Route 53 record name to use as DNS target. Cannot end with a period. (will be appended with .)",
             "AllowedPattern": "([a-z.])+(?<!\\\\.)$"
-        },
-        "Channel": {
-            "Type": "String",
-            "Description": "The channel partner name.",
-            "AllowedPattern": "[a-z.]+"
         },
         "Environment": {
             "Type": "String",
-            "Description": "The environment.",
-            "Default": "development",
-            "AllowedValues": ["development", "staging", "production"]
+            "Description": "Is this development or production? Development mode: no elb, autoscaling, or elasticache",
+            "Default": "production",
+            "AllowedValues": ["production", "development"]
         },
         "KeyName": {
             "Description": "The EC2 Key Pair to allow SSH access to the instances",
@@ -138,12 +137,7 @@
                         " --configsets default,development\n"
                     ]]}
                 },
-                "Tags": [
-                    {"Key": "Name", "Value": "apply"},
-                    {"Key": "Channel", "Value": {"Ref": "Channel"}},
-                    {"Key": "Environment", "Value": {"Ref": "Environment"}},
-                    {"Key": "System", "Value": "apply"}
-                ]
+                "Tags": [{"Key": "Name", "Value": "apply"}]
             }
         },
         "asWebServerGroup": {
@@ -156,12 +150,7 @@
                 "MinSize": "1",
                 "MaxSize": "3",
                 "LoadBalancerNames": [{"Ref": "elbLoadBalancer"}],
-                "Tags": [
-                    {"Key": "Name", "Value": "apply", "PropagateAtLaunch": "true"},
-                    {"Key": "Channel", "Value": {"Ref": "Channel"}, "PropagateAtLaunch": "true"},
-                    {"Key": "Environment", "Value": {"Ref": "Environment"}, "PropagateAtLaunch": "true"},
-                    {"Key": "System", "Value": "apply", "PropagateAtLaunch": "true"}
-                ]
+                "Tags": [{"Key": "Name", "Value": "apply", "PropagateAtLaunch": "true"}]
             },
             "CreationPolicy": {
                 "ResourceSignal": {
@@ -367,8 +356,8 @@
         "r53Record": {
             "Type": "AWS::Route53::RecordSet",
             "Properties": {
-                "HostedZoneId": "/hostedzone/Z1DQ4UYB8BEAYN",
-                "Name": {"Fn::Join": ["", [{"Ref": "Route53RecordName"}, ".energysensei.info."]]},
+                "HostedZoneId": {"Fn::Join": ["", ["/hostedzone/", {"Ref": "Route53HostedZoneId"}]]},
+                "Name": {"Fn::Join": ["", [{"Ref": "Route53RecordName"}, "."]]},
                 "Type": "CNAME",
                 "TTL": "900",
                 "ResourceRecords": [{"Fn::If": [

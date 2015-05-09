@@ -1,8 +1,8 @@
 # Sensei Application API
 Apply by API to work at Cascade Energy.  
-http://apply.energysensei.info
+http://api.jobs.energysensei.info
 
-# Applications [/api/v1/apply]
+# Applications [/apply]
 
 ## Send Application [POST]
 Send an application.
@@ -14,7 +14,8 @@ Send an application.
 
 + Request
 
-    `profile[name]`: String e.g. "Bill Murray"  
+    `name`: String e.g. "Bill Murray",
+    `blurb`: String e.g. "Say whatever you want here",  
     `resume`: multipart/form-data upload of a PDF file.
 
 + Response 200 (text/plain)

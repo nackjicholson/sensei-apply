@@ -1,4 +1,3 @@
-'use strict';
 import Bluebird from 'bluebird';
 import good from 'good';
 import goodConsole from 'good-console';

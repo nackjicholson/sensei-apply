@@ -1,17 +1,13 @@
 {
-  "name": "resume-service",
+  "name": "sensei-apply-api",
   "version": "0.0.1",
-  "description": "Accepts resumes and sends them to a slack channel.",
-  "main": "es5/api/server.js",
+  "description": "",
+  "main": "es5/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CascadeEnergy/sensei-apply.git"
-  },
   "author": "Will Vaughn <willieviseoae@gmail.com>",
-  "license": "GPL-3.0",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/CascadeEnergy/sensei-apply/issues"
   },
@@ -34,16 +30,11 @@
   "dependencies": {
     "babel-runtime": "^5.2.17",
     "bluebird": "^2.9.25",
-    "boom": "^2.7.1",
-    "co": "^4.5.4",
-    "config": "^1.12.0",
-    "form-data": "^0.2.0",
     "good": "^6.1.2",
     "good-console": "^5.0.0",
+    "got-promise": "^4.1.0",
     "hapi": "^8.4.0",
     "hapi-pkg": "0.0.1",
-    "joi": "^6.4.1",
-    "js-yaml": "^3.3.0",
     "lodash": "^3.8.0"
   }
 }

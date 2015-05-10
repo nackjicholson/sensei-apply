@@ -1,14 +1,12 @@
 'use strict';
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
 
 var _hapi = require('hapi');
 
 var _libLoadPlugins = require('./lib/loadPlugins');
 
 var _libLoadPlugins2 = _interopRequireDefault(_libLoadPlugins);
-
-require('babel/register');
 
 var server = new _hapi.Server();
 server.connection({ port: 9000 });

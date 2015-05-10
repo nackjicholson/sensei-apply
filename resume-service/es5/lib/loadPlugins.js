@@ -1,10 +1,12 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+var _Object$defineProperty = require('babel-runtime/core-js/object/define-property')['default'];
+
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+_Object$defineProperty(exports, '__esModule', {
   value: true
 });
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var _bluebird = require('bluebird');
 
@@ -29,8 +31,6 @@ var _packageJson2 = _interopRequireDefault(_packageJson);
 var _apiIndex = require('./api/index');
 
 var _apiIndex2 = _interopRequireDefault(_apiIndex);
-
-'use strict';
 
 /**
  * Loads plugins and returns a promise is resolved when all of the plugins

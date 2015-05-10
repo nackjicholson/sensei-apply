@@ -1,5 +1,3 @@
-require('babel/register');
-
 import {Server} from 'hapi';
 import loadPlugins from './lib/loadPlugins';
 

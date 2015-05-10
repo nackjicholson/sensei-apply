@@ -10,7 +10,7 @@ _Object$defineProperty(exports, '__esModule', {
   value: true
 });
 
-var marked0$0 = [handler].map(_regeneratorRuntime.mark);
+var marked0$0 = [storeResume].map(_regeneratorRuntime.mark);
 
 var _boom = require('boom');
 
@@ -28,9 +28,9 @@ var _uploadToSlack = require('../uploadToSlack');
 
 var _uploadToSlack2 = _interopRequireDefault(_uploadToSlack);
 
-function handler(request) {
+function storeResume(request) {
   var success, uploadPromise;
-  return _regeneratorRuntime.wrap(function handler$(context$1$0) {
+  return _regeneratorRuntime.wrap(function storeResume$(context$1$0) {
     while (1) switch (context$1$0.prev = context$1$0.next) {
       case 0:
         success = {
@@ -56,8 +56,8 @@ function handler(request) {
 
 exports['default'] = {
   method: 'POST',
-  path: '/apply',
-  handler: _utilGeneroute2['default'](handler),
+  path: '/resumes',
+  handler: _utilGeneroute2['default'](storeResume),
   config: {
     payload: {
       maxBytes: 209715200,

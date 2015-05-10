@@ -8,12 +8,12 @@ _Object$defineProperty(exports, '__esModule', {
   value: true
 });
 
-var _routesApply = require('./routes/apply');
+var _routesStore = require('./routes/store');
 
-var _routesApply2 = _interopRequireDefault(_routesApply);
+var _routesStore2 = _interopRequireDefault(_routesStore);
 
 function register(server, options, next) {
-  server.route([_routesApply2['default']]);
+  server.route([_routesStore2['default']]);
   next();
 }
 

@@ -2,7 +2,7 @@ import Bluebird from 'bluebird';
 import good from 'good';
 import goodConsole from 'good-console';
 import hapiPkg from 'hapi-pkg';
-import pkg from '../../package.json';
+import {version} from '../../package.json';
 import api from './api/index';
 
 /**
@@ -34,8 +34,8 @@ function loadPlugins(server) {
       {
         register: hapiPkg,
         options: {
-          endpoint: 'info',
-          pkg
+          endpoint: 'health',
+          pkg: { status: 'ok', version }
         }
       },
       {

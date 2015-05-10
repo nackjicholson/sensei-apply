@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+// Can only be executed by babel-node at this time.
+//
+// npm install -g babel-node
+// babel-node bin/sa
+require('../es6/lib/cli');

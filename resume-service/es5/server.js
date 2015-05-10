@@ -4,29 +4,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 var _hapi = require('hapi');
 
-var _hapiPkg = require('hapi-pkg');
+var _libLoadPlugins = require('./lib/loadPlugins');
 
-var _hapiPkg2 = _interopRequireDefault(_hapiPkg);
-
-var _packageJson = require('../package.json');
-
-var _packageJson2 = _interopRequireDefault(_packageJson);
+var _libLoadPlugins2 = _interopRequireDefault(_libLoadPlugins);
 
 require('babel/register');
 
 var server = new _hapi.Server();
-
 server.connection({ port: 9000 });
 
-server.register({
-  register: _hapiPkg2['default'],
-  options: { pkg: _packageJson2['default'], endpoint: 'info' }
-}, function (err) {
-  if (err) {
-    throw err;
-  }
-
+function startServer() {
   server.start(function () {
-    console.log('Server running at:', server.info.uri);
+    server.log('info', 'Server running at: ' + server.info.uri);
   });
-});
+}
+
+function logErrors(err) {
+  server.log('error', err);
+}
+
+_libLoadPlugins2['default'](server).then(startServer)['catch'](logErrors);

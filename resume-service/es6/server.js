@@ -1,22 +1,21 @@
 require('babel/register');
 
 import {Server} from 'hapi';
-import hapiPkg from 'hapi-pkg';
-import pkg from '../package.json';
+import loadPlugins from './lib/loadPlugins';
 
 let server = new Server();
-
 server.connection({ port: 9000 });
 
-server.register({
-  register: hapiPkg,
-  options: { pkg, endpoint: 'info' }
-}, (err) => {
-  if (err) {
-    throw err;
-  }
-
+function startServer() {
   server.start(() => {
-    console.log('Server running at:', server.info.uri);
+    server.log('info', 'Server running at: ' + server.info.uri);
   });
-});
+}
+
+function logErrors(err) {
+  server.log('error', err);
+}
+
+loadPlugins(server)
+  .then(startServer)
+  .catch(logErrors);

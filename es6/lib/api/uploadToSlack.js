@@ -5,7 +5,7 @@ import FormData from 'form-data';
 
 const TOKEN = config.get('slack.token');
 const CHANNELS = config.get('slack.channels');
-const UPLOAD_URL = config.get('slack.uploadUrl');
+const UPLOAD_URL = 'https://slack.com/api/files.upload';
 
 function uploadToSlack(payload) {
   return new Bluebird((resolve, reject) => {

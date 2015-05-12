@@ -1,4 +1,3 @@
 slack:
   token: <token>
   channels: <channelId>,<channelId>
-  uploadUrl: https://slack.com/api/files.upload

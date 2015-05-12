@@ -1,6 +1,7 @@
 import awstruct from 'awstruct';
 import chalksay from 'chalksay';
 import federation from '../resources/ec2/federation';
+import instance from '../resources/ec2/instance';
 import instanceProfile from '../resources/iam/instanceProfile';
 import role from '../resources/iam/role';
 
@@ -12,7 +13,12 @@ function up(options) {
     let manager = awstruct.resourceManager([
       role(),
       instanceProfile(),
-      federation()
+      federation(),
+      instance({
+        keyName: options.keyName,
+        securityGroups: options.securityGroups,
+        branch: options.branch
+      })
     ]);
 
     chalksay.blue('\nSpinning up sensei-apply infrastructure.\n');

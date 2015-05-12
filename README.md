@@ -34,3 +34,51 @@ Send a Resume.
     "message": "Thank you, we received your resume."
 }
 ```
+
+## Run this app local
+
+`npm install -g babel`
+`git clone git@github.com:CascadeEnergy/sensei-apply.git`
+`cd sensei-apply`
+`npm install`
+`cp config/default.yml config/local.yml`
+
+Put in your slack token and channel id, to the `local.yml`
+
+`babel-node es6/server.js`
+
+Go to http://localhost:9000/docs
+
+## Deploy this API to your AWS account and your slack channel.
+
+You need node and npm. This project uses ES6, so you'll need to install babel. If you don't run nvm, you should.
+You have to be on a box where you have full admin credentials, including ability to make IAM roles.
+
+This set of instructions will spin up all of the AWS infrastructure for this app. You will have to pay for that.
+
+`npm install -g babel`
+`git clone git@github.com:CascadeEnergy/sensei-apply.git`
+`cd sensei-apply`
+`npm install`
+`babel-node -- bin/sa` Help menu for the cli.
+`babel-node -- bin/sa up --keyname "YOUR_PEM_KEYNAME" --security-groups "MY_SSH_SECURITY_GROUPNAME"`
+
+SSH into the box which was created.
+`cd /var/cascade/sensei-apply`
+`cp config/default.yml config/local.yml`
+
+Put your slack api token, and the ID of your slack channel in `local.yml`.
+
+`cd support/`
+`./ec2_setup.sh`
+
+That should've installed nvm, iojs, pm2, and started 2 cluster processes running the server.
+
+To check the logs of the running processes.
+
+`. ~/.bash_profile`
+`nvm use iojs`
+`pm2 logs server`
+
+You should be seeing your ELB performing "/health" calls.
+You can access the api and docs via your ELB's Public DNS Name.

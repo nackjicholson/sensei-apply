@@ -2,8 +2,8 @@
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.1/install.sh | bash
 . ~/.nvm/nvm.sh
 nvm install iojs
-npm install -g babel
+npm install -g pm2
 
 cd /var/cascade/sensei-apply
 npm install --production
-babel-node es6/server.js
+pm2 start es6/server.js --next-gen-js -i 2

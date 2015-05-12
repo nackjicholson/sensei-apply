@@ -15,11 +15,23 @@ function* storeResume(request) {
   return yield uploadPromise;
 }
 
+const description = `Put yourself at the top of our list by sending a resume to
+our Slack channel. Give us your name, a resume file, and a short message.`;
+
+const notes = `When we contact you, we may ask what method you used to
+hit our API. Here's one way to do it.
+
+<pre>
+  curl -F resume=@bm.pdf -F name="Bill Murray" -F blurb="gunga gulunga"
+</pre>`;
+
 export default {
   method: 'POST',
   path: '/resumes',
   handler: generoute(storeResume),
   config: {
+    description: description,
+    notes: notes,
     payload: {
       maxBytes: 209715200,
       output: 'file',
@@ -27,9 +39,23 @@ export default {
     },
     validate: {
       payload: {
-        name: Joi.string().max(70).required(),
-        resume: Joi.object().required(),
-        blurb: Joi.string().max(140)
+        name: Joi
+          .string()
+          .required()
+          .description('Your full name')
+          .max(70),
+        resume: Joi
+          .any()
+          .required()
+          .description('A file posted as multipart/form-data'),
+        blurb: Joi
+          .string()
+          .optional()
+          .description(
+            `Say whatever you want here, the message is
+            posted with your file to our slack channel.`
+          )
+          .max(140)
       }
     }
   }

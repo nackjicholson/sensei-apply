@@ -6,6 +6,6 @@ yum install git -y
 mkdir -p /var/cascade
 
 cd /var/cascade
-git clone https://github.com/nackjicholson/sensei-apply.git
+git clone https://github.com/CascadeEnergy/sensei-apply.git
 chown -R ec2-user:ec2-user /var/cascade
 

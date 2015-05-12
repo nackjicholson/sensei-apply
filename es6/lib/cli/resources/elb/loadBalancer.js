@@ -53,7 +53,7 @@ function methods({fullyQualifiedName: loadBalancerName}) {
     var params = {
       Listeners: [
         {
-          InstancePort: 3000,
+          InstancePort: 9000,
           LoadBalancerPort: 80,
           Protocol: 'HTTP'
         }

@@ -3,6 +3,7 @@ import chalksay from 'chalksay';
 import federation from '../resources/ec2/federation';
 import instance from '../resources/ec2/instance';
 import instanceProfile from '../resources/iam/instanceProfile';
+import loadBalancer from '../resources/elb/loadBalancer';
 import role from '../resources/iam/role';
 
 function up(options) {
@@ -18,7 +19,8 @@ function up(options) {
         keyName: options.keyName,
         securityGroups: options.securityGroups,
         branch: options.branch
-      })
+      }),
+      loadBalancer()
     ]);
 
     chalksay.blue('\nSpinning up sensei-apply infrastructure.\n');

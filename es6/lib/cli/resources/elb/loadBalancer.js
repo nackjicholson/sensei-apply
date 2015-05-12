@@ -1,22 +1,16 @@
-'use strict';
+import {map, pluck, reduce} from 'lodash';
+import awstruct from 'awstruct';
+import Bluebird from 'bluebird';
 
-var _ = require('lodash');
-var awstruct = require('awstruct');
-var Bluebird = require('bluebird');
+const handleEventually = awstruct.util.handleEventually;
 
-function methods(attributes) {
-  var loadBalancerName = attributes.fullyQualifiedName;
-  var federationName = awstruct.getResourceName('sgFederation');
-  var params = { region: awstruct.region };
-  var elbEx = awstruct.ex.elb(params);
-  var elb = awstruct.sdk.elb(params);
-  var ec2 = awstruct.sdk.ec2(params);
-
-  function down() {
-    return elbEx
-      .doesLoadBalancerExist(loadBalancerName)
-      .then(tearDown);
-  }
+function methods({fullyQualifiedName: loadBalancerName}) {
+  const federationName = awstruct.getResourceName('sgFederation');
+  const serverTag = awstruct.getResourceName('ec2ApiServer');
+  const params = { region: awstruct.region };
+  const elbEx = awstruct.ex.elb(params);
+  const elb = awstruct.sdk.elb(params);
+  const ec2 = awstruct.sdk.ec2(params);
 
   function tearDown(exists) {
     if (!exists) {
@@ -25,12 +19,6 @@ function methods(attributes) {
 
     return elb
       .deleteLoadBalancerPromised({LoadBalancerName: loadBalancerName });
-  }
-
-  function up() {
-    return elbEx
-      .doesLoadBalancerExist(loadBalancerName)
-      .then(setUp);
   }
 
   function setUp(exists) {
@@ -44,7 +32,8 @@ function methods(attributes) {
         describeFederationSecurityGroup()
       ])
       .spread(createLoadBalancer)
-      .then(configureHealthCheck);
+      .then(configureHealthCheck)
+      .then(handleEventually(registerInstances));
   }
 
   function describeAvailabilityZones() {
@@ -58,8 +47,8 @@ function methods(attributes) {
   }
 
   function createLoadBalancer(zoneData, sgData) {
-    var availabilityZoneNames = _.pluck(zoneData.AvailabilityZones, 'ZoneName');
-    var securityGroupIds = _.pluck(sgData.SecurityGroups, 'GroupId');
+    const availabilityZoneNames = pluck(zoneData.AvailabilityZones, 'ZoneName');
+    const securityGroupIds = pluck(sgData.SecurityGroups, 'GroupId');
 
     var params = {
       Listeners: [
@@ -82,7 +71,7 @@ function methods(attributes) {
       HealthCheck: {
         HealthyThreshold: 5,
         Interval: 5,
-        Target: 'HTTP:3000/healthcheck',
+        Target: 'HTTP:9000/health',
         Timeout: 4,
         UnhealthyThreshold: 5
       },
@@ -92,13 +81,53 @@ function methods(attributes) {
     return elb.configureHealthCheckPromised(params);
   }
 
+  function registerInstances() {
+    return describeInstances()
+      .then((data) => {
+        const instanceIds = reduce(data.Reservations, (result, reservation) => {
+          const idList = pluck(reservation.Instances, 'InstanceId');
+          const idCollection = map(idList, id => ({InstanceId: id}));
+          result.push(...idCollection);
+          return result;
+        }, []);
+
+        return elb.registerInstancesWithLoadBalancerPromised({
+          Instances: instanceIds,
+          LoadBalancerName: loadBalancerName
+        });
+      });
+  }
+
+  function describeInstances() {
+    return ec2.describeInstancesPromised({
+      Filters: [
+        {
+          Name: 'instance-state-name',
+          Values: ['running']
+        },
+        {
+          Name: 'tag:Name',
+          Values: [serverTag]
+        }
+      ]
+    });
+  }
+
   return {
-    down: down,
-    up: up
+    down() {
+      return elbEx
+        .doesLoadBalancerExist(loadBalancerName)
+        .then(tearDown);
+    },
+    up() {
+      return elbEx
+        .doesLoadBalancerExist(loadBalancerName)
+        .then(setUp);
+    }
   };
 }
 
-module.exports = awstruct.resource({
+export default awstruct.resource({
   name: 'elbApi',
   type: 'LoadBalancer'
 }, methods);

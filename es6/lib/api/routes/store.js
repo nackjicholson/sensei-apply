@@ -3,6 +3,12 @@ import Joi from 'joi';
 import generoute from '../../util/generoute';
 import uploadToSlack from '../uploadToSlack';
 
+/**
+ * Stores resume by uploading it to slack channel.
+ *
+ * @param request
+ * @returns {*}
+ */
 function* storeResume(request) {
   let success = {
     message: 'Thank you, we received your resume.'

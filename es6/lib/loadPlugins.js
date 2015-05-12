@@ -2,6 +2,7 @@ import Bluebird from 'bluebird';
 import good from 'good';
 import goodConsole from 'good-console';
 import hapiPkg from 'hapi-pkg';
+import lout from 'lout';
 import {version} from '../../package.json';
 import api from './api/index';
 
@@ -30,6 +31,9 @@ function loadPlugins(server) {
             }
           }]
         }
+      },
+      {
+        register: lout
       },
       {
         register: hapiPkg,

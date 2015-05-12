@@ -1,5 +1,4 @@
 #!/bin/bash -xe
-
 nvm install iojs
 npm install -g babel-node
 

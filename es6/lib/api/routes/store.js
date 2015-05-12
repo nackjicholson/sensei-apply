@@ -28,7 +28,11 @@ const notes = `When we contact you, we may ask what method you used to
 hit our API. Here's one way to do it.
 
 <pre>
-  curl -F resume=@bm.pdf -F name="Bill Murray" -F blurb="gunga gulunga" http://jobs.energysensei.info
+  curl \
+    -F resume=@bm.pdf \
+    -F name="Bill Murray" \
+    -F blurb="gunga gulunga" \
+    http://jobs.energysensei.info/resumes
 </pre>`;
 
 export default {

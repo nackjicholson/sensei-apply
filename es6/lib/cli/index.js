@@ -5,11 +5,6 @@ import {version} from '../../../package.json';
 
 nomnom
   .options({
-    branch: {
-      abbr: 'b',
-      default: version,
-      help: 'The git tag or branch to checkout during deployment.'
-    },
     keyName: {
       abbr: 'k',
       full: 'key-name',

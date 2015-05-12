@@ -1,11 +1,11 @@
 import awstruct from 'awstruct';
-//const handleEventually = awstruct.util.handleEventually;
+import path from 'path';
+import fs from 'fs';
+import {pluck, reduce} from 'lodash';
 
-function methods(attributes) {
-  const branch = attributes.branch;
-  const keyName = attributes.keyName;
-  const securityGroups = attributes.securityGroups;
-  const serverName = attributes.fullyQualifiedName;
+const handleEventually = awstruct.util.handleEventually;
+
+function methods({keyName, securityGroups, fullyQualifiedName}) {
   const instanceProfileName = awstruct.getResourceName('profileApiServers');
   const federationName = awstruct.getResourceName('sgFederation');
   const params = { region: awstruct.region };
@@ -17,21 +17,75 @@ function methods(attributes) {
       return;
     }
 
-    const templatePath = path.resolve(__dirname, 'templates/userData.swig');
-    const userData = swig.renderFile(templatePath, {branch});
+    // TODO Remove this hack
+    // There is an issue with the instanceProfile not yet being fully available
+    // from a previous step. So I'm wrapping this kickoff in a handleEventually
+    // call. This feels like the wrong place, the waiting should happen at the
+    // end of creating the instance profile, it shouldn't leave that resource
+    // until the resource is available I may need a waitUntilAvailable utility.
+    return handleEventually(runInstances)()
+      .then(createTags)
+  }
+
+  function runInstances() {
+    const userDataPath = path.resolve(__dirname, 'templates/userData.sh');
+    const userData = fs.readFileSync(userDataPath);
 
     return ec2
-      .runInstances({
+      .runInstancesPromised({
         ImageId: 'ami-e7527ed7',
         MaxCount: 1,
         MinCount: 1,
-        //ClientToken: 'STRING_VALUE',
         IamInstanceProfile: { Name: instanceProfileName },
         InstanceType: 't2.micro',
         KeyName: keyName,
         SecurityGroupIds: [federationName, ...securityGroups],
-        UserData: 'STRING_VALUE'
-      })
+        UserData: new Buffer(userData).toString('base64')
+      });
+  }
+
+  function createTags(data) {
+    const instanceIds = pluck(data.Instances, 'InstanceId');
+
+    return ec2.createTagsPromised({
+      Resources: instanceIds,
+      Tags: [
+        {
+          Key: 'Name',
+          Value: fullyQualifiedName
+        }
+      ]
+    })
+  }
+
+  function tearDown(exists) {
+    if (!exists) {
+      return;
+    }
+
+    return describeInstances()
+      .then(terminateInstances);
+  }
+
+  function describeInstances() {
+    return ec2.describeInstancesPromised({
+      Filters: [
+        {
+          Name: 'tag:Name',
+          Values: [fullyQualifiedName]
+        }
+      ]
+    });
+  }
+
+  function terminateInstances(data) {
+    const instanceIds = reduce(data.Reservations, (result, reservation) => {
+      const ids = pluck(reservation.Instances, 'InstanceId');
+      result.push(...ids);
+      return result;
+    }, []);
+
+    return ec2.terminateInstancesPromised({InstanceIds: instanceIds})
   }
 
   return {
@@ -41,6 +95,9 @@ function methods(attributes) {
      * @returns {Promise}
      */
     down() {
+      return ec2Ex
+        .doesInstanceExist(fullyQualifiedName, 'running')
+        .then(tearDown);
     },
 
     /**
@@ -49,11 +106,8 @@ function methods(attributes) {
      * @returns {Promise}
      */
     up() {
-      // check if the instance exists
-      // runinstances
-      // create tags
       return ec2Ex
-        .doesInstanceExist(serverName)
+        .doesInstanceExist(fullyQualifiedName, 'running')
         .then(setUp);
     }
   }

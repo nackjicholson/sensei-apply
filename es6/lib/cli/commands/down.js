@@ -3,6 +3,7 @@ import chalksay from 'chalksay';
 import federation from '../resources/ec2/federation';
 import instance from '../resources/ec2/instance';
 import instanceProfile from '../resources/iam/instanceProfile';
+import loadBalancer from '../resources/elb/loadBalancer';
 import role from '../resources/iam/role';
 
 function down(options) {
@@ -11,6 +12,7 @@ function down(options) {
 
   function destroyInfrastructure() {
     var manager = awstruct.resourceManager([
+      loadBalancer(),
       instance(),
       instanceProfile(),
       role(),

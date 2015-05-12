@@ -23,7 +23,7 @@ Send a Resume.
 
 + Request
 
-    `name`: String e.g. "Bill Murray",
+    `name`: String e.g. "Bill Murray",  
     `blurb`: String e.g. "Say whatever you want here",  
     `resume`: multipart/form-data upload of a PDF file.
 

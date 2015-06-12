@@ -1,7 +1,7 @@
 import nomnom from 'nomnom';
 import down from './commands/down';
 import up from './commands/up';
-import {version} from '../../../package.json';
+//import {version} from '../../../package.json';
 
 nomnom
   .options({

@@ -24,7 +24,7 @@ function methods({keyName, securityGroups, fullyQualifiedName}) {
     // end of creating the instance profile, it shouldn't leave that resource
     // until the resource is available I may need a waitUntilAvailable utility.
     return handleEventually(runInstances)()
-      .then(createTags)
+      .then(createTags);
   }
 
   function runInstances() {
@@ -55,7 +55,7 @@ function methods({keyName, securityGroups, fullyQualifiedName}) {
           Value: fullyQualifiedName
         }
       ]
-    })
+    });
   }
 
   function tearDown(exists) {
@@ -85,7 +85,7 @@ function methods({keyName, securityGroups, fullyQualifiedName}) {
       return result;
     }, []);
 
-    return ec2.terminateInstancesPromised({InstanceIds: instanceIds})
+    return ec2.terminateInstancesPromised({InstanceIds: instanceIds});
   }
 
   return {
@@ -110,7 +110,7 @@ function methods({keyName, securityGroups, fullyQualifiedName}) {
         .doesInstanceExist(fullyQualifiedName, 'running')
         .then(setUp);
     }
-  }
+  };
 }
 
 export default awstruct.resource({

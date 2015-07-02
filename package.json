@@ -1,6 +1,6 @@
 {
   "name": "sensei-apply",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Accepts resumes and sends them to a slack channel.",
   "main": "es5/api/server.js",
   "scripts": {

@@ -9,6 +9,8 @@ We are a small DevOps team based in Portland, OR working with a fascinating data
 exciting new technologies. If you're interested in how we do things, go ahead and look through the code in
 this repo, and our open source projects at http://github.com/CascadeEnergy
 
+## :exclamation: Notice this API is no longer available
+
 ## Check the Live API's Generated Documentation
 #### http://jobs.energysensei.info/docs
 
